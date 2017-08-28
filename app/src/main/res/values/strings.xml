@@ -1,0 +1,75 @@
+<resources>
+    <string name="app_name">NhanceTech</string>
+
+    <!-- Strings related to login -->
+
+    <!--<string name="backend_url">http://192.168.0.152:8080</string>--> <!-- Local Dev Server -->
+    <!--<string name="backend_url">https://qa.nhancenow.com</string>--><!-- Digital Ocean QA Server Public IP HTTPS-->
+    <string name="source_type">android</string>
+    <string name="backend_url">https://app.nhancenow.com</string><!--Prod Server HTTPS-->
+    <string name="prompt_mobile">Mobile No</string>
+    <string name="prompt_password">Password</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_sign_in_short">Sign in</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+    <string name="permission_rationale">"Contacts permissions are needed for providing email completions."</string>
+    <string name="error_incorrect_mobileno">Incorrect mobile no</string>
+    <string name="unable_to_process">Unable to process your request</string>
+    <string name="no_history_text">No service requests has been addressed. Service history can\'t be shown.</string>
+    <string name="prompt_srn">Service Request No</string>
+    <string name="techopractivity">Operations</string>
+    <string name="get_details">Get Details</string>
+    <string name="error_while_communicating">Error while communicating with server</string>
+    <!-- APPLICATION FONTS-->
+    <string name="font_normal">fonts/helvetica_neue.ttf</string>
+    <string name="font_light">fonts/HelveticaNeueLight.ttf</string>
+    <string name="font_bold">fonts/helvetica_neu_bold.ttf</string>
+    <string name="font_medium">fonts/HelveticaNeueMedium.ttf</string>
+    <string name="font_thin">fonts/HelveticaNeueThin.ttf</string>
+    <string name="font_tahoma">fonts/tahoma.ttf</string>
+    <string name="reset">Reset</string>
+    <string name="preview">Preview</string>
+    <string name="service_req_no">Service Request No</string>
+    <string name="customer_name">Customer Name</string>
+    <string name="cust_mob_no">Customer Mob. No</string>
+    <string name="instllation_charges">%s Charges</string>
+    <string name="parts_installed">New Parts Installed</string>
+    <string name="yes">Yes</string>
+    <string name="no">No</string>
+    <string name="total_amount">Total Amount</string>
+    <string name="discount_amount">Discount (Amount)</string>
+    <string name="net_payable_amount">Net Payable Amount</string>
+    <string name="part_name">Part Name</string>
+    <string name="qty">Qty</string>
+    <string name="amount">Amount</string>
+    <string name="confirm_send"><![CDATA[Confirm & Send]]></string>
+    <string name="invoice_generated">Invoice Generated</string>
+    <string name="invoice_generated_successfully">Invoice has been generated and sent to customer successfully.</string>
+    <string name="clear_all">Clear All</string>
+    <string name="payment_pending">Payment Pending</string>
+    <string name="payment_paid">Paid</string>
+    <string name="srn">SRN</string>
+    <string name="os">Android</string>
+    <string name="logout">Logout</string>
+    <string name="sure_to_logout">Are you sure you want to logout?</string>
+    <string name="clear_ser_history">Clear Service History</string>
+    <string name="sure_to_clear">Are you sure you want to clear all service history?</string>
+    <string name="cancel">Cancel</string>
+    <string name="exit_toast_txt">Press again to exit NHANCE Technician App</string>
+    <string name="additional_labour_charge">Additional labour/part\'s charge</string>
+    <string name="tax_name">Tax</string>
+    <string name="online">Online</string>
+    <string name="cash">Cash</string>
+    <string name="mode_of_payment">Mode Of Payment</string>
+    <string name="total_cash_collected">Total Cash Collected</string>
+    <string name="total_online_payment">Total Online Payment</string>
+
+
+    <array name="pagetitle">
+        <item>Invoice Generator</item>
+        <item>Service History</item>
+    </array>
+</resources>

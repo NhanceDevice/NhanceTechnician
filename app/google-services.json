@@ -1,0 +1,151 @@
+{
+  "project_info": {
+    "project_number": "522291441489",
+    "firebase_url": "https://nhancenow-3daf7.firebaseio.com",
+    "project_id": "nhancenow-3daf7",
+    "storage_bucket": "nhancenow-3daf7.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522291441489:android:3fee53ee0bf87cf9",
+        "android_client_info": {
+          "package_name": "com.nhance.b2c"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "522291441489-434e1tjqlctpd1kch40an9uaf13i1tbc.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "522291441489-18gauag654rg7qtfm3359ch2gblcfs84.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKZf_K2V-xwDn-Z8MqebutBRnz9OZk9kE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522291441489:android:6f14fcd810486e19",
+        "android_client_info": {
+          "package_name": "dev.com.nhance.b2c"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "522291441489-434e1tjqlctpd1kch40an9uaf13i1tbc.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "522291441489-18gauag654rg7qtfm3359ch2gblcfs84.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKZf_K2V-xwDn-Z8MqebutBRnz9OZk9kE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522291441489:android:696d7a770fa32f5b",
+        "android_client_info": {
+          "package_name": "demo.com.nhance.b2c"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "522291441489-434e1tjqlctpd1kch40an9uaf13i1tbc.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "522291441489-18gauag654rg7qtfm3359ch2gblcfs84.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKZf_K2V-xwDn-Z8MqebutBRnz9OZk9kE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:522291441489:android:b0ea53d81b771e34",
+        "android_client_info": {
+          "package_name": "com.nhance.technician"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "522291441489-434e1tjqlctpd1kch40an9uaf13i1tbc.apps.googleusercontent.com",
+          "client_type": 3
+        },
+        {
+          "client_id": "522291441489-18gauag654rg7qtfm3359ch2gblcfs84.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCKZf_K2V-xwDn-Z8MqebutBRnz9OZk9kE"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 1,
+          "other_platform_oauth_client": []
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
