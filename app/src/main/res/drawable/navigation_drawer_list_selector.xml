@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!--<item android:state_focused="false" android:state_pressed="false" android:drawable="@color/navigation_drawer_list_state_pressed_after"/>-->
+    <item android:state_activated="true" android:drawable="@color/navigation_drawer_list_state_pressed_after"/>
+    <!--<item android:state_pressed="true" android:drawable="@color/navigation_drawer_list_state_pressed"/>-->
+    <item android:state_pressed="true" android:drawable="@color/navigation_drawer_list_profile_pic_bg"/>
+</selector>

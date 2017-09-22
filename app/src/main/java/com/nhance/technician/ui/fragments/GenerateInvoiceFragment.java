@@ -1,14 +1,16 @@
 package com.nhance.technician.ui.fragments;
 
+import android.content.Context;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
+import android.support.v7.widget.AppCompatAutoCompleteTextView;
 import android.support.v7.widget.AppCompatTextView;
 import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -17,10 +19,12 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 
 import com.nhance.technician.R;
 import com.nhance.technician.app.ApplicationConstants;
@@ -28,6 +32,8 @@ import com.nhance.technician.model.ServicePartDTO;
 import com.nhance.technician.model.ServiceRequestDTO;
 import com.nhance.technician.ui.TechOperationsActivity;
 import com.nhance.technician.ui.custom.adapter.PartDetailsAdapter;
+import com.nhance.technician.util.NonCollapsibleRecyclerView;
+import com.nhance.technician.util.TypefaceUtils.TypefaceHelper;
 import com.nhance.technician.util.Util;
 
 import java.util.ArrayList;
@@ -43,18 +49,19 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
     public static final String TAG = GenerateInvoiceFragment.class.getName();
     private View mProgressView;
     AutoCompleteTextView discountAmountACTV, additionalLabourChargeACTV;
-    AppCompatTextView serviceReqNoACTV, customerNameACTV, customerMobNoACTV, installationChargesACTV, serviceReqChargesHeaderACTV,
-            totalAmountACTV, netPayableAmountACTV, discountAmountCurrencySymbolACTV, additionalLabourChargeCurrencySymbolACTV, taxNameACTV, taxAmountACTV, taxAmountCurrencySymbolACTV;
+    AppCompatTextView serviceReqLabelTV, serviceReqNoACTV, customerNameACTV, customerMobNoACTV, installationChargesACTV, serviceReqChargesHeaderACTV,
+            totalAmountACTV, netPayableAmountLabelTV, netPayableAmountACTV, discountAmountCurrencySymbolACTV, additionalLabourChargeCurrencySymbolACTV,
+            taxNameACTV, taxAmountACTV, taxAmountCurrencySymbolACTV;
     LinearLayout partsInstalledLL, modeOfPaymentRGLL;
     private RadioGroup newPartsInstalledRG, modeOfPaymentRG;
     LinearLayout partsDetailsContainerLL;
-    RecyclerView partDetailsContainerRV;
+    NonCollapsibleRecyclerView partDetailsContainerRV;
     double totalAmount, netPayableAmount, discountAmount, additionalLabourCharge, taxAmount = 0D;
     private ImageButton addPartRowButton;
     private PartDetailsAdapter partDetailsAdapter;
     private List<ServicePartDTO> selectedPartList = null;
     private ServiceRequestDTO serviceRequestDTO;
-    private Integer selectedModeOfPayment = MODE_OF_PAYMENT_ONLINE;
+    private Integer selectedModeOfPayment = MODE_OF_PAYMENT_CASH;
 
     public void setServiceRequestDTO(ServiceRequestDTO serviceRequestDTO) {
         this.serviceRequestDTO = serviceRequestDTO;
@@ -66,12 +73,36 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
         setHasOptionsMenu(true);
     }
 
+    public void hideSoftKeyPad() {
+        new Handler().post(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager inputManager = (InputMethodManager) getActivity().getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                if (getActivity().getWindow().getCurrentFocus() != null) {
+                    inputManager.hideSoftInputFromWindow(getActivity().getWindow().getCurrentFocus().getWindowToken(), 0);
+                    getActivity().getWindow().getCurrentFocus().clearFocus();
+                }
+            }
+        });
+    }
+
+    public void showSoftKeyPad() {
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                InputMethodManager inputManager = (InputMethodManager) getActivity().getApplicationContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                inputManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+            }
+        }, 200);
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_section_generate_invoice, container, false);
 
         mProgressView = rootView.findViewById(R.id.fetch_progress);
+        serviceReqLabelTV = (AppCompatTextView) rootView.findViewById(R.id.serv_req_label_tv);
         serviceReqNoACTV = (AppCompatTextView) rootView.findViewById(R.id.ser_req_no_tv);
         customerNameACTV = (AppCompatTextView) rootView.findViewById(R.id.cust_name_tv);
         customerMobNoACTV = (AppCompatTextView) rootView.findViewById(R.id.cust_mob_no_tv);
@@ -89,11 +120,37 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
         addPartRowButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int position = partDetailsAdapter.setRowIndex();
-                partDetailsAdapter.addItemToPartDetailsMap(position);
-                //partDetailsAdapter.notifyItemInserted(position);
-                //partDetailsContainerRV.scrollToPosition(position);
-                partDetailsAdapter.notifyDataSetChanged();
+                hideSoftKeyPad();
+                int index = partDetailsContainerRV.getLayoutManager().getChildCount();
+                String input = "";
+                AppCompatAutoCompleteTextView et;
+                boolean isServicePart = false;
+                if (partDetailsContainerRV != null) {
+                    View view = partDetailsContainerRV.getChildAt(index - 1);
+                    if (view != null) {
+                        et = (AppCompatAutoCompleteTextView) view.findViewById(R.id.partname_actv);
+                        input = et.getText().toString().trim();
+                    }
+                }
+                List<ServicePartDTO> servicePartsList = serviceRequestDTO.getParts();
+                for (int i = 0; i < servicePartsList.size(); i++) {
+                    if (servicePartsList.get(i).getPartName().trim().equalsIgnoreCase(input)) {
+                        isServicePart = true;
+                    }
+                }
+                if (isServicePart) {
+                    /*int position = partDetailsAdapter.setRowIndex();
+                    partDetailsAdapter.addItemToPartDetailsMap(position);*/
+                    List<Integer> rowIndex = partDetailsAdapter.getRowIndex();
+                    int rowIndxCount = rowIndex.size();
+                    rowIndex.add(rowIndxCount);
+                    partDetailsAdapter = new PartDetailsAdapter(getActivity(), serviceRequestDTO.getParts(), rowIndex,
+                            serviceRequestDTO.getCurrencyCode(), GenerateInvoiceFragment.this, partDetailsAdapter.getPartDetailsMap());
+                    partDetailsContainerRV.setAdapter(partDetailsAdapter);
+                    //showSoftKeyPad();
+                } else {
+                    Toast.makeText(getActivity(), "Part doesn't exists.", Toast.LENGTH_SHORT).show();
+                }
             }
         });
         serviceReqChargesHeaderACTV.setText(String.format(getResources().getString(R.string.instllation_charges), serviceRequestDTO.getServiceRequestSubject()));
@@ -195,11 +252,22 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                 }
             }
         });
+        netPayableAmountLabelTV = (AppCompatTextView) rootView.findViewById(R.id.net_payable_amount_label_tv);
         netPayableAmountACTV = (AppCompatTextView) rootView.findViewById(R.id.net_payable_amount_tv);
         partsInstalledLL = (LinearLayout) rootView.findViewById(R.id.part_installed_rg_ll);
         modeOfPaymentRGLL = (LinearLayout) rootView.findViewById(R.id.mode_of_payment_rg_ll);
         partsDetailsContainerLL = (LinearLayout) rootView.findViewById(R.id.part_details_container_ll);
-        partDetailsContainerRV = (RecyclerView) rootView.findViewById(R.id.part_details_container_rv);
+        partDetailsContainerRV = (NonCollapsibleRecyclerView) rootView.findViewById(R.id.part_details_container_rv);
+        partDetailsContainerRV.setHasFixedSize(true);
+        LinearLayoutManager layout = new LinearLayoutManager(getActivity(),
+                LinearLayoutManager.VERTICAL, false) {
+            @Override
+            public boolean canScrollVertically() {
+                return false;
+            }
+        };
+        partDetailsContainerRV.setLayoutManager(layout);
+        partDetailsContainerRV.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
         if (partDetailsContainerRV.getChildCount() > 0) {
             partDetailsContainerRV.removeAllViews();
         }
@@ -271,11 +339,11 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                             case R.id.parts_installed_yes_rb: {
                                 partsDetailsContainerLL.setVisibility(View.VISIBLE);
                                 addPartRowButton.setVisibility(View.VISIBLE);
-                                partDetailsContainerRV.setLayoutManager(new LinearLayoutManager(getActivity()));
                                 List<Integer> partRowId = new ArrayList<Integer>();
                                 partRowId.add(0);
-                                partDetailsAdapter = new PartDetailsAdapter(getActivity(), serviceRequestDTO.getParts(), partRowId, serviceRequestDTO.getCurrencyCode());
+                                partDetailsAdapter = new PartDetailsAdapter(getActivity(), serviceRequestDTO.getParts(), partRowId, serviceRequestDTO.getCurrencyCode(), GenerateInvoiceFragment.this);
                                 partDetailsContainerRV.setAdapter(partDetailsAdapter);
+                                showSoftKeyPad();
                                 partDetailsAdapter.setPartAmountChangeListener(new PartDetailsAdapter.PartAmountChangeListener() {
                                     @Override
                                     public void onPartAmountChanged(List<ServicePartDTO> partDetailsMap) {
@@ -348,6 +416,9 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                 partsInstalledLL.setVisibility(View.GONE);
             }
         }
+        TypefaceHelper.getInstance().setTypeface(rootView, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
+        TypefaceHelper.getInstance().setTypeface(serviceReqLabelTV, TypefaceHelper.getFont(TypefaceHelper.FONT.BOLD));
+        TypefaceHelper.getInstance().setTypeface(netPayableAmountLabelTV, TypefaceHelper.getFont(TypefaceHelper.FONT.BOLD));
         return rootView;
     }
 
@@ -359,7 +430,12 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_preview) {
             if (netPayableAmount > 0)
-                makeViewsReadyForPreview();
+                if (partDetailsAdapter.doesPartExists) {
+                    makeViewsReadyForPreview();
+                } else {
+                    Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Invoice can't be generated for parts doesn't exists.", Snackbar.LENGTH_LONG);
+                    snackbar.show();
+                }
             else {
                 Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Invoice can't be generated for Zero(0) amount.", Snackbar.LENGTH_LONG);
                 snackbar.show();

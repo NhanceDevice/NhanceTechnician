@@ -148,4 +148,8 @@ public interface ApplicationConstants {
 
     String CASH_PAYMENT = "Cash";
     String ONLINE_PAYMENT = "Online";
+
+    String REQUESTING_RESET_PASSWORD = "REQUESTING_RESET_PASSWORD";
+
+    String CHANGE_PASSWORD_AFTER_OTP = "CHANGE PASSWORD AFTER OTP";
 }

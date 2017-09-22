@@ -15,10 +15,9 @@
   -->
 
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-                xmlns:app="http://schemas.android.com/apk/res-auto"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-    >
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
     <ProgressBar
         android:id="@+id/fetch_progress"
@@ -28,7 +27,7 @@
         android:layout_centerInParent="true"
         android:layout_gravity="center"
         android:gravity="center"
-        android:visibility="gone"/>
+        android:visibility="gone" />
 
     <LinearLayout
         android:id="@+id/searchfield_container"
@@ -38,14 +37,13 @@
         android:orientation="vertical"
         android:visibility="visible">
 
-
         <android.support.design.widget.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="16dp"
             android:layout_marginTop="100dp"
             android:hint="@string/prompt_srn"
-            app:hintAnimationEnabled="true" >
+            app:hintAnimationEnabled="true">
 
             <android.support.design.widget.TextInputEditText
                 android:id="@+id/servicerequestnotv"
@@ -66,7 +64,7 @@
             android:background="@color/colorAccent"
             android:text="@string/get_details"
             android:textColor="@android:color/white"
-            android:textStyle="bold"/>
+            android:textStyle="bold" />
     </LinearLayout>
 
 </RelativeLayout>

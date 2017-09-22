@@ -1,46 +1,43 @@
 package com.nhance.technician.ui;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.FrameLayout;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.nhance.technician.R;
 import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.NhanceApplication;
-import com.nhance.technician.model.Application;
 import com.nhance.technician.service.fcm.RegistrationIntentService;
 import com.nhance.technician.ui.fragments.RootFragment;
 import com.nhance.technician.ui.fragments.ServiceHistorySectionFragment;
 import com.nhance.technician.util.AccessPreferences;
 
-public class TechOperationsActivity extends AppCompatActivity implements ActionBar.TabListener {
+import java.util.ArrayList;
+import java.util.List;
 
+public class TechOperationsActivity extends BaseFragmentActivity {
 
     public static final String TAG = TechOperationsActivity.class.getName();
 
     private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
-    private AppSectionsPagerAdapter mAppSectionsPagerAdapter;
 
-    private ViewPager mViewPager;
+    private ViewPager tabViewPager;
 
     private Context mContext;
 
-    private CoordinatorLayout coordinatorLayout;
+    private FrameLayout coordinatorLayout;
+    private TabLayout tabLayout;
 
     private String userCode;
     RootFragment rootFragment;
@@ -48,44 +45,22 @@ public class TechOperationsActivity extends AppCompatActivity implements ActionB
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
-        coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
+        setContentView(R.layout.activity_fragment_container);
+
+        setUpNavigationDrawer(getString(R.string.app_name), (FrameLayout) findViewById(R.id.container));
+
+        coordinatorLayout = (FrameLayout) findViewById(R.id.container);
 
         mContext = this;
         userCode = getIntent().getStringExtra("USERCODE");
 
-        mAppSectionsPagerAdapter = new AppSectionsPagerAdapter(getSupportFragmentManager());
+        tabViewPager = (ViewPager) findViewById(R.id.pager);
+        tabViewPager.setOffscreenPageLimit(0);
+        setupViewPager(tabViewPager);
 
-        final ActionBar actionBar = getSupportActionBar();
+        tabLayout = (TabLayout) findViewById(R.id.tabs);
+        tabLayout.setupWithViewPager(tabViewPager);
 
-        actionBar.setHomeButtonEnabled(false);
-
-        actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-
-        mViewPager = (ViewPager) findViewById(R.id.pager);
-        mViewPager.setAdapter(mAppSectionsPagerAdapter);
-        invalidateFragmentMenus(mViewPager.getCurrentItem());
-        mViewPager.addOnPageChangeListener(new ViewPager.SimpleOnPageChangeListener() {
-            @Override
-            public void onPageSelected(int position) {
-                actionBar.setSelectedNavigationItem(position);
-                //supportInvalidateOptionsMenu();
-                invalidateFragmentMenus(position);
-            }
-
-            @Override
-            public void onPageScrollStateChanged(int state) {
-                super.onPageScrollStateChanged(state);
-//                supportInvalidateOptionsMenu();
-            }
-        });
-
-        for (int i = 0; i < mAppSectionsPagerAdapter.getCount(); i++) {
-            actionBar.addTab(
-                    actionBar.newTab()
-                            .setText(mAppSectionsPagerAdapter.getPageTitle(i))
-                            .setTabListener(this));
-        }
         boolean isTokenSentToServer = AccessPreferences.get(NhanceApplication.getContext(), ApplicationConstants.SENT_TOKEN_TO_SERVER, false);
 
         if (!isTokenSentToServer) {
@@ -95,12 +70,46 @@ public class TechOperationsActivity extends AppCompatActivity implements ActionB
             }
         }
     }
-    private void invalidateFragmentMenus(int position){
-        for(int i = 0; i < mAppSectionsPagerAdapter.getCount(); i++){
-            mAppSectionsPagerAdapter.getItem(i).setHasOptionsMenu(i == position);
-        }
-        supportInvalidateOptionsMenu(); //or respectively its support method.
+
+    private void setupViewPager(ViewPager viewPager) {
+        ViewPagerAdapter adapterTab = new ViewPagerAdapter(getSupportFragmentManager());
+        adapterTab.addFragment(rootFragment = new RootFragment(), (mContext.getResources().getStringArray(R.array.pagetitle))[0]);
+        adapterTab.addFragment(serviceHistorySectionFragment = new ServiceHistorySectionFragment(), (mContext.getResources().getStringArray(R.array.pagetitle))[1]);
+        viewPager.setAdapter(adapterTab);
     }
+
+    class ViewPagerAdapter extends FragmentPagerAdapter {
+        private final List<Fragment> mFragmentList = new ArrayList<>();
+        private final List<String> mFragmentTitleList = new ArrayList<>();
+
+        public ViewPagerAdapter(FragmentManager manager) {
+            super(manager);
+            if (mFragmentList.size() > 3) {
+                tabLayout.setTabMode(TabLayout.MODE_SCROLLABLE);
+            }
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+            return mFragmentList.get(position);
+        }
+
+        @Override
+        public int getCount() {
+            return mFragmentList.size();
+        }
+
+        public void addFragment(Fragment fragment, String title) {
+            mFragmentList.add(fragment);
+            mFragmentTitleList.add(title);
+        }
+
+        @Override
+        public CharSequence getPageTitle(int position) {
+            return mFragmentTitleList.get(position);
+        }
+    }
+
     private boolean isPlayServicesInstalled() {
         GoogleApiAvailability getGoogleapiAvailability = GoogleApiAvailability.getInstance();
         int Code = getGoogleapiAvailability.isGooglePlayServicesAvailable(this);
@@ -116,21 +125,7 @@ public class TechOperationsActivity extends AppCompatActivity implements ActionB
         return true;
     }
 
-    @Override
-    public void onTabUnselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-    }
-
-    @Override
-    public void onTabSelected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-        mViewPager.setCurrentItem(tab.getPosition());
-    }
-
-    @Override
-    public void onTabReselected(ActionBar.Tab tab, FragmentTransaction fragmentTransaction) {
-    }
-
-
-    public CoordinatorLayout getCoordinatorLayout() {
+    public FrameLayout getCoordinatorLayout() {
         return coordinatorLayout;
     }
 
@@ -139,67 +134,6 @@ public class TechOperationsActivity extends AppCompatActivity implements ActionB
         return userCode;
     }
 
-    public void logoutUser() {
-        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
-        builder.setTitle(getResources().getString(R.string.logout));
-        builder.setMessage(getResources().getString(R.string.sure_to_logout));
-        builder.setPositiveButton(getResources().getString(R.string.logout), new DialogInterface.OnClickListener() {
-
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-                AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.SENT_TOKEN_TO_SERVER, false);
-                new RegistrationIntentService().unregisterGCMToken();
-                AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_LOGGED_OUT);
-                Application.getInstance().setLoggedInUserName("");
-                Application.getInstance().setMobileNumber(null);
-                AccessPreferences.clear(TechOperationsActivity.this);
-                Intent loginIntent = new Intent(TechOperationsActivity.this, LoginActivity.class);
-                startActivity(loginIntent);
-                finish();
-
-            }
-        });
-        builder.setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
-
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
-            }
-        });
-        builder.show();
-    }
-
-    public class AppSectionsPagerAdapter extends FragmentPagerAdapter {
-        public AppSectionsPagerAdapter(FragmentManager fm) {
-            super(fm);
-        }
-
-        @Override
-        public Fragment getItem(int i) {
-            switch (i) {
-                case 0:
-                    rootFragment = new RootFragment();
-                    return rootFragment;
-
-                case 1:
-                    serviceHistorySectionFragment = new ServiceHistorySectionFragment();
-                    return serviceHistorySectionFragment;
-                default:
-                    return null;
-
-            }
-        }
-
-        @Override
-        public int getCount() {
-            return (mContext.getResources().getStringArray(R.array.pagetitle)).length;
-        }
-
-        @Override
-        public CharSequence getPageTitle(int position) {
-            return (mContext.getResources().getStringArray(R.array.pagetitle))[position];
-        }
-
-    }
     boolean doubleBackToExitPressedOnce = false;
     @Override
     public void onBackPressed() {

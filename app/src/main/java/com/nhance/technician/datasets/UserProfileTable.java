@@ -191,6 +191,46 @@ public class UserProfileTable {
             e.printStackTrace();
             throw new NhanceException(NhanceException.DATABASE_SAVE_ERR);
         }
+    }
 
+    public boolean isUserProfileDetailsExists(String mobileNumber) throws NhanceException {
+
+        return valueDetailsExistsInTable(UserProfileTable.USER_PROFILE_TABLE, UserProfileTable.COLUMN_MOBILE_NO, mobileNumber);
+    }
+
+    /**
+     * Method to check whether given column value already exists in table
+     *
+     * @param tableName
+     * @param columnName
+     * @param columnValue
+     * @return boolean
+     * @throws NhanceException
+     */
+    public boolean valueDetailsExistsInTable(String tableName, String columnName, String columnValue) throws NhanceException {
+
+        Cursor checkerCursor = null;
+        try{
+
+            NhanceApplication.applicationDataBase.beginTransaction();
+            String sqlQuery = "select * from "+tableName + " where " +
+                    columnName + " = '" + columnValue+"'" ;
+
+            checkerCursor = NhanceApplication.applicationDataBase.getQueryResult(sqlQuery,null);
+            if(null != checkerCursor && checkerCursor.moveToFirst())
+                return true;
+            else
+                return false;
+
+        }catch(Exception e)
+        {
+            throw new NhanceException(NhanceException.DATABASE_RETREIVAL_ERR);
+        }
+        finally{
+            if(null != checkerCursor)
+                checkerCursor.close();
+            checkerCursor = null;
+            NhanceApplication.applicationDataBase.endTransaction();
+        }
     }
 }

@@ -1,12 +1,13 @@
 <resources>
-    <string name="app_name">NhanceTech</string>
+    <string name="app_name">Service Engineer</string>
 
     <!-- Strings related to login -->
 
     <!--<string name="backend_url">http://192.168.0.152:8080</string>--> <!-- Local Dev Server -->
-    <!--<string name="backend_url">https://qa.nhancenow.com</string>--><!-- Digital Ocean QA Server Public IP HTTPS-->
+    <string name="backend_url">https://qa.nhancenow.com</string><!-- Digital Ocean QA Server Public IP HTTPS-->
+    <!--<string name="backend_url">http://192.168.0.96:8080</string>-->
+    <!--<string name="backend_url">https://app.nhancenow.com</string>--><!--Prod Server HTTPS-->
     <string name="source_type">android</string>
-    <string name="backend_url">https://app.nhancenow.com</string><!--Prod Server HTTPS-->
     <string name="prompt_mobile">Mobile No</string>
     <string name="prompt_password">Password</string>
     <string name="action_sign_in">Sign in</string>
@@ -58,7 +59,7 @@
     <string name="clear_ser_history">Clear Service History</string>
     <string name="sure_to_clear">Are you sure you want to clear all service history?</string>
     <string name="cancel">Cancel</string>
-    <string name="exit_toast_txt">Press again to exit NHANCE Technician App</string>
+    <string name="exit_toast_txt">Press again to exit NHANCE Service Engineer App</string>
     <string name="additional_labour_charge">Additional labour/part\'s charge</string>
     <string name="tax_name">Tax</string>
     <string name="online">Online</string>
@@ -66,10 +67,60 @@
     <string name="mode_of_payment">Mode Of Payment</string>
     <string name="total_cash_collected">Total Cash Collected</string>
     <string name="total_online_payment">Total Online Payment</string>
+    <string name="pswd_info_msg">If don\'t have password, please use Mobile Number as Password.</string>
+    <string name="frgt_pswd_text"><u>Forgot Password</u></string>
 
 
     <array name="pagetitle">
         <item>Invoice Generator</item>
         <item>Service History</item>
     </array>
+
+    <string name="copyright">Copyright &#169; 2017, NHANCE</string>
+    <string name="new_password">New Password</string>
+    <string name="retype_password">Retype Password</string>
+    <string name="reset_pswd_btn_label">Change Password</string>
+    <string name="network_error">Not able to connect to Nhance. Please check your network connection and try again.</string>
+    <string name="requesting_for_otp">Requesting for OTP</string>
+    <string name="please_enter_old_password">Please enter old password</string>
+    <string name="password_should_be_of_length">Password length should be of minimum 6 characters.</string>
+    <string name="please_enter_new_password">Please enter new password.</string>
+    <string name="please_enter_confirm_password">Please retype new password.</string>
+    <string name="new_password_and_confirm_password_should_be_same">Retyped password doesn\'t match with the new password.</string>
+    <string name="old_password_and_new_password_should_not_be_same">Old and new password shouldn\'t be same.</string>
+    <string name="reset_password_label">Reset Password</string>
+    <string name="please_enter_a_valid_user_id">Please enter a valid Email id or Mobile No.</string>
+    <string name="change_pswd_btn_label">Change</string>
+    <string name="frgt_pswd_heading">Forgot Password?</string>
+    <string name="please_enter_mobile_number">Seems you forgot to enter Mobile Number</string>
+    <string name="please_enter_emailid_mobile_number">For a better experience we need email ID or Mobile Number</string>
+    <string name="incomplete_mobile_number">Sorry, we can not take mobile number less than 10-digits</string>
+    <string name="mobile_number_should_not_more_than_10">Sorry, we can not take mobile number more than 10-digits</string>
+    <string name="invalid_mobile_number_starts_with_zero">Alert! Mobile number field should not start with Zero</string>
+    <string name="validate_otp_screen_title">Validate OTP</string>
+    <string name="verifying_otp">Verifying OTP</string>
+    <string name="please_enter_otp">Please enter OTP.</string>
+    <string name="incomplete_otp">Incomplete OTP.</string>
+    <string name="hint_otp">Enter OTP</string>
+    <string name="validate">Validate</string>
+    <string name="name_lable">Name</string>
+    <string name="phone_number_title">Number</string>
+    <string name="about_us">About-Us</string>
+    <string name="navigation_drawe_list_item">Navigation Drawer List Item</string>
+
+    <string-array name="app_navigation_menu">
+        <!-- <item>Help &amp; Support</item>-->
+        <item> Change Password</item>
+        <item>@string/logout</item>
+    </string-array>
+    <integer-array name="app_navigation_menu_icons">
+        <!--<item>@mipmap/ic_menu_help</item>-->
+        <item>@mipmap/change_password_icon</item>
+        <item>@mipmap/logout_icon</item>
+    </integer-array>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="action_settings">Settings</string>
+    <string name="current_password">Current Password</string>
 </resources>

@@ -70,24 +70,26 @@ public class SearchSRNFragment extends Fragment {
             public void onClick(View view) {
 
                 fetchServiceRequestDetails();
-
+                ((TechOperationsActivity) getActivity()).hideSoftKeyPad();
             }
         });
         return rootView;
     }
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_srn_search, menu);
+//        inflater.inflate(R.menu.menu_srn_search, menu);
     }
 
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (item.getItemId() == R.id.action_logout) {
-
-            ((TechOperationsActivity)getActivity()).logoutUser();
-            return true;
-        }
+//        if (item.getItemId() == R.id.action_logout) {
+//
+//            ((TechOperationsActivity) getActivity()).logoutUser();
+//            return true;
+//        }
         return super.onOptionsItemSelected(item);
     }
+
     @Override
     public void onResume() {
         super.onResume();
@@ -99,11 +101,11 @@ public class SearchSRNFragment extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
     }
 
-    private void showGenerateInvoiceFragment(){
+    private void showGenerateInvoiceFragment() {
         FragmentTransaction trans = getFragmentManager().beginTransaction();
         GenerateInvoiceFragment generateInvoiceFragment = new GenerateInvoiceFragment();
         generateInvoiceFragment.setServiceRequestDTO(serviceRequestDTO);
-        trans.replace(R.id.root_frame,generateInvoiceFragment,RootFragment.FRAGMENT_TAG);
+        trans.replace(R.id.root_frame, generateInvoiceFragment, RootFragment.FRAGMENT_TAG);
         trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         trans.addToBackStack(TAG);
         trans.commit();

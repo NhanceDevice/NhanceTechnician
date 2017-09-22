@@ -1,16 +1,23 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <!--<style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        &lt;!&ndash; Customize your theme here. &ndash;&gt;
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>-->
+
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
         <item name="colorPrimary">@color/colorPrimary</item>
         <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
         <item name="colorAccent">@color/colorAccent</item>
+        <item name="android:typeface">serif</item>
     </style>
 
     <style name="defaulttextappearance">
-
-        <item name="android:textSize">15sp</item>
+        <item name="android:textSize">14sp</item>
         <item name="textAllCaps">false</item>
         <item name="android:paddingBottom">5dp</item>
         <item name="android:textStyle">normal</item>
@@ -18,7 +25,6 @@
     </style>
 
     <style name="boldtextappearance">
-
         <item name="android:textSize">17sp</item>
         <item name="textAllCaps">false</item>
         <item name="android:paddingBottom">5dp</item>
@@ -46,6 +52,38 @@
         <item name="colorAccent">@color/colorAccent</item>
         <item name="android:textColorPrimary">@color/black</item>
         <item name="android:background">@color/background</item>
+    </style>
+
+    <style name="profile_pic_navigation_drawer_imageview_style">
+        <item name="android:layout_width">60dp</item>
+        <item name="android:layout_centerInParent">true</item>
+        <item name="android:layout_height">60dp</item>
+        <item name="android:paddingRight">10dp</item>
+        <item name="android:paddingLeft">10dp</item>
+        <item name="android:src">@mipmap/usericon</item>
+    </style>
+
+    <style name="TabLayoutStyle" parent="Widget.Design.TabLayout">
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:background">@color/tab_layout_bg_color</item>
+        <item name="tabMaxWidth">@dimen/tab_max_width</item>
+        <item name="tabIndicatorColor">@color/space_white</item>
+        <item name="tabGravity">fill</item>
+        <item name="tabIndicatorHeight">0.5dp</item>
+        <item name="tabPaddingStart">15dp</item>
+        <item name="tabPaddingEnd">15dp</item>
+        <item name="tabMode">fixed</item>
+        <item name="tabBackground">?attr/selectableItemBackground</item>
+        <item name="tabTextAppearance">@style/MyCustomTabTextAppearance</item>
+        <item name="tabSelectedTextColor">@color/colorPrimaryDark</item>
+    </style>
+
+    <style name="MyCustomTabTextAppearance" parent="TextAppearance.Design.Tab">
+        <item name="android:textSize">12sp</item>
+        <item name="textAllCaps">true</item>
+        <item name="android:paddingBottom">5dp</item>
+        <item name="android:textStyle">bold</item>
     </style>
 
 

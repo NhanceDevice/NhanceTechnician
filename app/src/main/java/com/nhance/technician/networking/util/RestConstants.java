@@ -16,7 +16,11 @@ public interface RestConstants {
     String DEVICE_ID_HEADER = "Device-Id";
     String APPLICATION_VERSION_HEADER = "Application-Version";
 
-    String LOGIN_REQ = "/NHance-Module-Auth/rest/auth/login";
+    String LOGIN_REQ = "/NHance-Module-Auth/rest/user/login";
+    String RESET_PASSWORD_REQ_URL 				= "/NHance-Module-Auth/rest/user/resetPassword";
+    String OTP_REQUEST_URL						= "/NHance-Module-Auth/rest/user/forgotPassword";
+    String VERIFY_OTP_URL						= "/NHance-Module-Auth/rest/user/validateOtp";
+    String CHANGE_PASSWORD_URL 					= "/NHance-Module-Auth/rest/user/changePassword";
     String GET_SER_REQ_DETAILS = "/NHance-Module-Dk/rest/serviceRequest/technician/getServiceRequestDetails";
     String UPLOAD_INVOICE = "/NHance-Module-Dk/rest/serviceRequest/technician/uploadInvoiceComponent";
     String SYNC_REQ = "/NHance-Module-Auth/rest/user/sync";

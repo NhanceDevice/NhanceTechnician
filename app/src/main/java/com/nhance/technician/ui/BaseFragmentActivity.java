@@ -12,17 +12,35 @@ package com.nhance.technician.ui;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.ActionBarDrawerToggle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatImageView;
+import android.support.v7.widget.Toolbar;
+import android.text.Html;
+import android.util.Log;
+import android.view.View;
 import android.view.Window;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.nhance.technician.R;
+import com.nhance.technician.app.ApplicationConstants;
+import com.nhance.technician.app.NhanceApplication;
+import com.nhance.technician.model.Application;
+import com.nhance.technician.service.fcm.RegistrationIntentService;
+import com.nhance.technician.ui.fragments.NavigationDrawerFragment;
+import com.nhance.technician.util.AccessPreferences;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
@@ -34,8 +52,7 @@ import java.util.Map;
 /**
  * Created by afsar on 07-Oct-15.
  */
-public class BaseFragmentActivity extends AppCompatActivity 
-         {
+public class BaseFragmentActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks{
 
 
     public static final String TAG = BaseFragmentActivity.class.getName();
@@ -47,6 +64,14 @@ public class BaseFragmentActivity extends AppCompatActivity
 
     private static final String ARG_SECTION_NUMBER = "section_number";
 
+    private NavigationDrawerFragment mNavigationDrawerFragment;
+
+    /**
+     * Used to store the last screen title. For use in .
+     */
+    private CharSequence mTitle;
+
+    private Toolbar toolbar;
 
     /**
      * dateEditText is used to set and retrieve date.
@@ -97,8 +122,9 @@ public class BaseFragmentActivity extends AppCompatActivity
         handler = new Handler();
     }
 
-
-
+    public ConnectivityManager getmSystemService() {
+        return mSystemService;
+    }
 
     public int getStatusBarHeight() {
         int result = 0;
@@ -109,10 +135,6 @@ public class BaseFragmentActivity extends AppCompatActivity
         return result;
     }
 
-
-
-
-    
 
     private static final String HTTPS = "https://";
     private static final String HTTP = "http://";
@@ -128,7 +150,56 @@ public class BaseFragmentActivity extends AppCompatActivity
         }
     }
 
-    
+    public void logoutUser() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this, R.style.AppCompatAlertDialogStyle);
+        builder.setTitle(getResources().getString(R.string.logout));
+        builder.setMessage(getResources().getString(R.string.sure_to_logout));
+        builder.setPositiveButton(getResources().getString(R.string.logout), new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+                AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.SENT_TOKEN_TO_SERVER, false);
+                new RegistrationIntentService().unregisterGCMToken();
+                AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_LOGGED_OUT);
+                Application.getInstance().setLoggedInUserName("");
+                Application.getInstance().setMobileNumber(null);
+                AccessPreferences.clear(BaseFragmentActivity.this);
+                Intent loginIntent = new Intent(BaseFragmentActivity.this, LoginActivity.class);
+                startActivity(loginIntent);
+                finish();
+
+            }
+        });
+        builder.setNegativeButton(getResources().getString(R.string.cancel), new DialogInterface.OnClickListener() {
+
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.dismiss();
+            }
+        });
+        builder.show();
+    }
+
+    @Override
+    public void onNavigationDrawerItemSelected(int position) {
+
+         if(position == 0)
+        {
+            Intent intent = new Intent(this, ChangePasswordActivity.class);
+            startActivity(intent);
+        }
+        else if(position == 1)
+        {
+            logoutUser();
+        }
+    }
+
+    @Override
+    public void onNavigationDrawerProfileClicked() {
+
+
+        Log.d(TAG,"Profile Clicked");
+    }
+
     public static Activity getForegroundActivity() {
         Activity activity = null;
         try {
@@ -166,6 +237,96 @@ public class BaseFragmentActivity extends AppCompatActivity
         return activity;
     }
 
-    
+    public void hideSoftKeyPad() {
+        try {
+            InputMethodManager inputManager = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+            inputManager.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), InputMethodManager.HIDE_NOT_ALWAYS);
+        } catch (Exception e) {
+            if (!(e.getMessage() == null)) {
 
+            }
+            e.printStackTrace();
+        }
+    }
+
+    public void setUpNavigationDrawer(String screenTitle, View continer) {
+
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        mNavigationDrawerFragment = (NavigationDrawerFragment)
+                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+        mTitle = screenTitle;
+
+        mNavigationDrawerFragment.setContainer(continer);
+
+        // Set up the drawer.
+        mNavigationDrawerFragment.setUp(
+                R.id.navigation_drawer,
+                (DrawerLayout) findViewById(R.id.drawer_layout), toolbar, screenTitle);
+    }
+
+    public Toolbar getToolbar(){
+        return toolbar;
+    }
+
+    public ActionBar getCustomActionBar(){
+
+        return mNavigationDrawerFragment.getActionBar();
+    }
+
+    public ActionBarDrawerToggle getActionBarDrawerToggle(){
+
+        return mNavigationDrawerFragment.getmDrawerToggle();
+    }
+
+    public void setUpNavigationDrawer(String screenTitle, String screenSubTitle, View continer, boolean isSideBarRequired) {
+
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        mNavigationDrawerFragment = (NavigationDrawerFragment)
+                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+        mTitle = screenTitle;
+
+        mNavigationDrawerFragment.setContainer(continer);
+
+        if(isSideBarRequired){
+            mNavigationDrawerFragment.setUp(
+                    R.id.navigation_drawer,
+                    (DrawerLayout) findViewById(R.id.drawer_layout), toolbar, screenTitle, screenSubTitle);
+        }else{
+            ActionBar actionBar = getCustomActionBar();
+            actionBar.setDisplayHomeAsUpEnabled(true);
+            actionBar.setHomeButtonEnabled(true);
+            actionBar.setDisplayShowTitleEnabled(false);
+            actionBar.setDisplayUseLogoEnabled(true);
+            actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_STANDARD);
+
+            TextView screen_title = (TextView) toolbar.findViewById(R.id.screen_title);
+            screen_title.setVisibility(View.VISIBLE);
+            screen_title.setText(Html.fromHtml("<font color='#ffffff'>" + mTitle + " </font>"));
+//            actionBar.setTitle(Html.fromHtml("<font color='#ffffff'>" + mTitle + " </font>"));
+
+            if(screenSubTitle != null && screenSubTitle.trim().length() > 0)
+                actionBar.setSubtitle(Html.fromHtml("<font color='#ffffff'> <small>" + screenSubTitle + " <small> </font>"));
+        }
+    }
+
+    public void setUpNavigationDrawer(String screenTitle, String screenSubTitle, View continer) {
+
+        toolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
+        mNavigationDrawerFragment = (NavigationDrawerFragment)
+                getSupportFragmentManager().findFragmentById(R.id.navigation_drawer);
+        mTitle = screenTitle;
+
+        mNavigationDrawerFragment.setContainer(continer);
+
+        // Set up the drawer.
+        mNavigationDrawerFragment.setUp(
+                R.id.navigation_drawer,
+                (DrawerLayout) findViewById(R.id.drawer_layout), toolbar, screenTitle, screenSubTitle);
+    }
 }

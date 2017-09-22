@@ -33,6 +33,7 @@ public class Application {
 	private int isdCode;
 	private String userCode;
 	private String os;
+	private String loggedInUserProfilePicPath;
 
 	private Application()
 	{
@@ -119,6 +120,13 @@ public class Application {
 		this.password = password;
 	}
 
+	public String getLoggedInUserProfilePicPath() {
+		return loggedInUserProfilePicPath;
+	}
+
+	public void setLoggedInUserProfilePicPath(String loggedInUserProfilePicPath) {
+		this.loggedInUserProfilePicPath = loggedInUserProfilePicPath;
+	}
 
 	@Override
 	public String toString() {

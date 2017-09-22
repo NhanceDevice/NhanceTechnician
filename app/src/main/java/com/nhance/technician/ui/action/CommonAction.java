@@ -1,12 +1,15 @@
 package com.nhance.technician.ui.action;
 
 import android.database.Cursor;
+import android.util.Log;
 
+import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.datasets.UserProfileTable;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.model.Application;
 import com.nhance.technician.model.BaseModel;
+import com.nhance.technician.util.AccessPreferences;
 
 /**
  * Created by afsarhussain on 12/07/17.
@@ -59,6 +62,25 @@ public class CommonAction {
             if(null != cursor) cursor.close();
             cursor = null;
             NhanceApplication.applicationDataBase.endTransaction();
+        }
+    }
+
+    public void reloadApplicationContextDetails(){
+        try{
+            Application application = Application.getInstance();
+            if(application == null || (application != null && (application.getUserCode() == null || (application.getUserCode() != null && application.getUserCode().length() == 0)))){
+                Integer userStatus = AccessPreferences.get(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_NEW);
+                if (userStatus == ApplicationConstants.USER_LOGGED_IN) {
+                    String loggedInUsersMobileNo = AccessPreferences.get(NhanceApplication.getContext(), ApplicationConstants.LOGGED_IN_USER, "");
+                    Log.d(CommonAction.class.getName(), "loggedInUsersMobileNo : " + loggedInUsersMobileNo);
+                    if (loggedInUsersMobileNo != null && loggedInUsersMobileNo.length() > 0) {
+                        loadBasicUserDeatilsToApplicationModel(loggedInUsersMobileNo);
+                        Application loadedApplication1 = Application.getInstance();
+                    }
+                }
+            }
+        }catch (Exception e){
+            e.printStackTrace();
         }
     }
 }

@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="application_type">3</integer>
+    <integer name="application_type">4</integer>
+    <integer name="animation_default_duration">300</integer>
+    <integer name="MOBILE_NO_LENGTH">10</integer>
+    <integer name = "OTP_LENGTH">6</integer>
 </resources>

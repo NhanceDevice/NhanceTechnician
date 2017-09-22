@@ -1,8 +1,8 @@
 package com.nhance.technician.ui.custom.adapter;
 
 import android.content.Context;
-import android.os.Handler;
 import android.support.design.widget.TextInputEditText;
+import android.support.v7.widget.AppCompatAutoCompleteTextView;
 import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -18,10 +18,14 @@ import android.widget.TextView;
 import com.nhance.technician.R;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.ServicePartDTO;
+import com.nhance.technician.ui.fragments.GenerateInvoiceFragment;
+import com.nhance.technician.util.TypefaceUtils.TypefaceHelper;
 import com.nhance.technician.util.Util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by afsarhussain on 09/07/17.
@@ -29,7 +33,7 @@ import java.util.List;
 
 public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.PartViewHolder> {
 
-
+    private Map<String, ServicePartDTO> servicePartsMap;
     private List<Integer> rowIndex;
     private Context mContext;
     private List<ServicePartDTO> servicePartDTOList;
@@ -37,38 +41,64 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
     private ArrayAdapter<Integer> digitsAdapter;
     private List<String> partNameList;
     private List<ServicePartDTO> partDetailsMap;
-    private Integer[] digits = new Integer[]{1, 2, 3, 4, 5, 6, 7, 8, 9};
+    private Integer[] digits = new Integer[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
     private String currencyCode;
+    private GenerateInvoiceFragment mFrag;
+    public boolean doesPartExists = false;
 
-    public PartDetailsAdapter(Context context, List<ServicePartDTO> servicePartDTOList, List<Integer> rowIndex, String currencyCode) {
+    public PartDetailsAdapter(Context context, List<ServicePartDTO> servicePartDTOList, List<Integer> rowIndex, String currencyCode, GenerateInvoiceFragment frag) {
         this.mContext = context;
         this.servicePartDTOList = servicePartDTOList;
         this.rowIndex = rowIndex;
         this.currencyCode = currencyCode;
         getPartNameList();
-
-        partNameAdapter = new ArrayAdapter<String>(mContext, android.R.layout.simple_spinner_item, partNameList);
-        partNameAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        this.mFrag = frag;
+        partNameAdapter = new ArrayAdapter<String>(mContext, R.layout.row_spn, partNameList);
         digitsAdapter = new ArrayAdapter<Integer>(mContext, android.R.layout.simple_spinner_item, digits);
         digitsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         partDetailsMap = new ArrayList<>();
         addItemToPartDetailsMap(0);
     }
 
+    public PartDetailsAdapter(Context context, List<ServicePartDTO> servicePartDTOList, List<Integer> rowIndex,
+                              String currencyCode, GenerateInvoiceFragment frag, List<ServicePartDTO> mPartDetailsMap) {
+        this.mContext = context;
+        this.servicePartDTOList = servicePartDTOList;
+        this.rowIndex = rowIndex;
+        this.currencyCode = currencyCode;
+        getPartNameList();
+        this.mFrag = frag;
+        partNameAdapter = new ArrayAdapter<String>(mContext, R.layout.row_spn, partNameList);
+        digitsAdapter = new ArrayAdapter<Integer>(mContext, android.R.layout.simple_spinner_item, digits);
+        digitsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        partDetailsMap = mPartDetailsMap;
+        addItemToPartDetailsMap(rowIndex.size() - 1);
+    }
+
     @Override
     public PartViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.content_part_details, parent, false);
-        PartViewHolder partViewHolder = new PartViewHolder(view);
+        final PartViewHolder partViewHolder = new PartViewHolder(view);
+        TypefaceHelper.getInstance().setTypeface(view, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
         return partViewHolder;
     }
 
     @Override
     public void onBindViewHolder(final PartViewHolder holder, final int position) {
+        if (partDetailsMap.size() > 0 && partDetailsMap.size() != 1 && position != (partDetailsMap.size() - 1)) {
+            holder.partNameACTV.setText(partDetailsMap.get(position).getPartName());
+            holder.quantityACTV.setSelection(partDetailsMap.get(position).getQuantity());
+            holder.amountACTV.setText(Util.getFormattedAmount(partDetailsMap.get(position).getAmount()));
+        }
+        if (position == (partDetailsMap.size() - 1)) {
+            holder.partNameACTV.requestFocus();
+        }
         LOG.d("onBindViewHolder : AdapterPosition  : >>>> : ", holder.getAdapterPosition() + "");
         LOG.d("onBindViewHolder : Position         : >>>> : ", position + "");
         if (holder.getAdapterPosition() == 0) {
             holder.deleteButton.setVisibility(View.INVISIBLE);
         }
+
         holder.deleteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -79,9 +109,7 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
                 if (rowIndex.size() > position) {
                     rowIndex.remove(position);
                     partDetailsMap.remove(position);
-//                    notifyItemRemoved(position);
-//                    notifyItemRangeChanged(position, rowIndex.size());
-                    notifyDataSetChanged();
+                    notifyItemRemoved(position);
                     LOG.d("holder.deleteButton.setOnClickListener : partDetailsMap  : >> partDetailsMap.size() : >> ", partDetailsMap.size() + " : 222222222 >> : " + partDetailsMap + "");
                     mPartAmountChangeListener.onPartAmountChanged(partDetailsMap);
                 } else {
@@ -89,12 +117,13 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
                 }
             }
         });
-        holder.partnameACTV.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+        holder.partNameACTV.setThreshold(1);
+        holder.partNameACTV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+            public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+                mFrag.hideSoftKeyPad();
                 LOG.d("holder.partnameACTV.setOnItemSelectedListener : pos  : >> ", pos + "");
-
-                ServicePartDTO servicePartDTO = servicePartDTOList.get(pos);
+                ServicePartDTO servicePartDTO = servicePartsMap.get(parent.getAdapter().getItem(pos));
                 ServicePartDTO partDetails = null;
                 LOG.d("holder.partnameACTV.setOnItemSelectedListener  : >> position : >> ", position + " : 3333333333 >> : partDetails : " + partDetails + "");
                 partDetails = partDetailsMap.get(position);
@@ -104,18 +133,12 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
                     holder.quantityACTV.setSelection(0);
                     holder.amountACTV.setText(Util.getFormattedAmount(servicePartDTO.getAmount()));
                 }
-//                    partDetailsMap.set(position, partDetails);
-
                 holder.itemView.setTag(position);
+                holder.quantityACTV.setSelection(1);
                 LOG.d("holder.partnameACTV.setOnItemSelectedListener : partDetailsMap  : >> partDetailsMap.size() : >> ", partDetailsMap.size() + " : 4444444444 >> : " + partDetailsMap + "");
-
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
             }
         });
+
         holder.quantityACTV.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
@@ -136,9 +159,9 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
                 partDetails.setQuantity(digit);
                 partDetails.setAmount(amount);
                 partDetailsMap.set(position, partDetails);
-                holder.amountACTV.setText(Util.getFormattedAmount(amount));
+                if (holder.partNameACTV.getText().length() > 0)
+                    holder.amountACTV.setText(Util.getFormattedAmount(amount));
                 LOG.d("holder.quantityACTV.setOnItemSelectedListener : partDetailsMap  : >> partDetailsMap.size() : >> ", partDetailsMap.size() + " : 7777777777 >> : " + partDetailsMap + "");
-
             }
 
             @Override
@@ -146,7 +169,9 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
 
             }
         });
+
         holder.currenctCodeTV.setText(new String(Character.toChars(Integer.parseInt(currencyCode, 16))));
+
         holder.amountACTV.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -161,47 +186,30 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
                 mPartAmountChangeListener.onPartAmountChanged(partDetailsMap);
             }
         });
-        new Handler().postDelayed(new Runnable() {
+
+        holder.partNameACTV.addTextChangedListener(new TextWatcher() {
             @Override
-            public void run() {
-                if (partDetailsMap != null)
-                    LOG.d("values assigned while redrawing : partDetailsMap  : >> partDetailsMap.size() : >> ", partDetailsMap.size() + " : 8888888888 >> :  " + partDetailsMap + "");
-                ServicePartDTO partDetailsDto = (partDetailsMap != null && partDetailsMap.size() > position) ? partDetailsMap.get(position) : null;
-                if (partDetailsDto != null) {
-                    String partName = partDetailsDto.getPartName();
-                    if (partName != null) {
-                        int selectedPartNameIndex = -1;
-                        for (int index = 0; index < partNameList.size(); index++) {
-                            if (partName.equalsIgnoreCase(partNameList.get(index))) {
-                                selectedPartNameIndex = index;
-                                break;
-                            }
-                        }
-                        if (selectedPartNameIndex != -1) {
-                            holder.partnameACTV.setSelection(selectedPartNameIndex);
-                        }
-                    }
-                    Integer quantity = partDetailsDto.getQuantity();
-                    if (quantity != null && quantity > 0) {
-                        int selectedQuantityIndex = -1;
-                        for (int quantityIndex = 0; quantityIndex < digits.length; quantityIndex++) {
-                            if (quantity == digits[quantityIndex]) {
-                                selectedQuantityIndex = quantityIndex;
-                                break;
-                            }
-                        }
-                        if (selectedQuantityIndex != -1) {
-                            holder.quantityACTV.setSelection(selectedQuantityIndex);
-                        }
-                    }
-                    Double amount = partDetailsDto.getAmount();
-                    if (amount != null && amount > 0) {
-                        holder.amountACTV.setText(Util.getFormattedAmount(amount));
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                boolean isServicePart = false;
+                for (int i = 0; i < servicePartDTOList.size(); i++) {
+                    if (servicePartDTOList.get(i).getPartName().trim().equalsIgnoreCase(s.toString())) {
+                        isServicePart = true;
                     }
                 }
-            }
-        }, 100);
 
+                if (isServicePart) {
+                    doesPartExists = true;
+                }
+            }
+        });
     }
 
     @Override
@@ -219,14 +227,19 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
         return rowIndx;
     }
 
+    public List<ServicePartDTO> getPartDetailsMap() {
+        return partDetailsMap;
+    }
+
     public void addItemToPartDetailsMap(int position) {
         ServicePartDTO servicePartDTO = servicePartDTOList.get(0);
         ServicePartDTO partDetails = new ServicePartDTO(servicePartDTO.getPartId(), servicePartDTO.getPartName(), servicePartDTO.getAmount(), digits[0]);
-        if (partDetailsMap.size() > position) {
+       /* if (partDetailsMap.size() > position) {
             partDetailsMap.set(position, partDetails);
-        } else {
-            partDetailsMap.add(partDetails);
-        }
+        } else {*/
+        partDetailsMap.add(position, partDetails);
+        notifyDataSetChanged();
+        // }
     }
 
     public void clearAllItems() {
@@ -235,7 +248,8 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
     }
 
     public class PartViewHolder extends RecyclerView.ViewHolder {
-        private AppCompatSpinner partnameACTV, quantityACTV;
+        private AppCompatSpinner quantityACTV;
+        private AppCompatAutoCompleteTextView partNameACTV;
         private TextInputEditText amountACTV;
         private TextView currenctCodeTV;
         public ImageButton deleteButton;
@@ -243,24 +257,24 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
         public PartViewHolder(View v) {
 
             super(v);
-            partnameACTV = (AppCompatSpinner) v.findViewById(R.id.partname_actv);
+            partNameACTV = (AppCompatAutoCompleteTextView) v.findViewById(R.id.partname_actv);
             quantityACTV = (AppCompatSpinner) v.findViewById(R.id.quantity_actv);
             amountACTV = (TextInputEditText) v.findViewById(R.id.amount_actv);
             currenctCodeTV = (TextView) v.findViewById(R.id.currencycode_tv);
             deleteButton = (ImageButton) v.findViewById(R.id.delete_button);
             amountACTV.setKeyListener(null);
             quantityACTV.setAdapter(digitsAdapter);
-            partnameACTV.setAdapter(partNameAdapter);
-
-
+            partNameACTV.setAdapter(partNameAdapter);
         }
     }
 
     private void getPartNameList() {
         partNameList = new ArrayList<>();
+        servicePartsMap = new HashMap<>();
         if (servicePartDTOList != null && servicePartDTOList.size() > 0) {
             for (int index = 0; index < servicePartDTOList.size(); index++) {
                 partNameList.add(servicePartDTOList.get(index).getPartName());
+                servicePartsMap.put(servicePartDTOList.get(index).getPartName(), servicePartDTOList.get(index));
             }
         }
     }
@@ -274,6 +288,4 @@ public class PartDetailsAdapter extends RecyclerView.Adapter<PartDetailsAdapter.
     public void setPartAmountChangeListener(final PartAmountChangeListener partAmountChangeListener) {
         mPartAmountChangeListener = partAmountChangeListener;
     }
-
-
 }
