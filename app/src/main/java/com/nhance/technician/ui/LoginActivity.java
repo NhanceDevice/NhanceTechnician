@@ -4,12 +4,12 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.AppCompatEditText;
@@ -133,7 +133,7 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_login);
+        setContentView(R.layout.activity_login, getResources().getString(R.string.login));
         // Set up the login form.
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
         mMobileNoView = (AutoCompleteTextView) findViewById(R.id.mobileno);
@@ -539,9 +539,31 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
         });
     }
 
-    private void showAlert(String message){
+    @Override
+    public void onClick(DialogInterface dialog, int which) {
+        switch (mAlertCode){
+            case defaultCode:
+            {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                    {
+                        dialog.dismiss();
+                        break;
+                    }
+                    case DialogInterface.BUTTON_NEGATIVE:
+                    {
+                        dialog.dismiss();
+                        break;
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+   /* private void showAlert(String message){
         Snackbar snackbar = Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_LONG);
         snackbar.show();
-    }
+    }*/
 }
 

@@ -114,10 +114,10 @@ public class ForgotPasswordFrag extends Fragment {
         return v;
     }
 
-    private void showAlert(String message){
+    /*private void showAlert(String message){
         Snackbar snackbar = Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_LONG);
         snackbar.show();
-    }
+    }*/
 
     private void onLoginClicked() {
         BaseFragmentActivity baseFragmentActivity = (BaseFragmentActivity)getActivity();
@@ -125,7 +125,7 @@ public class ForgotPasswordFrag extends Fragment {
         baseFragmentActivity.hideSoftKeyPad();
 
         if (baseFragmentActivity.getmSystemService().getActiveNetworkInfo() == null) {
-            showAlert(getResources().getString(R.string.network_error));
+            ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.network_error));
         } else {
             validateAndProceed();
         }
@@ -146,18 +146,18 @@ public class ForgotPasswordFrag extends Fragment {
         boolean retValue = true;
 
         if (EditTextUtils.getText(inputEmailIdOrMobileNumber).length() == 0) {
-            showAlert(getResources().getString(R.string.please_enter_emailid_mobile_number));
+            ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.please_enter_emailid_mobile_number));
 
             retValue = false;
         } else if (EditTextUtils.getText(inputEmailIdOrMobileNumber).length() > 0 && EditTextUtils.isNumeric(EditTextUtils.getText(inputEmailIdOrMobileNumber)) &&
                 !(EditTextUtils.getText(inputEmailIdOrMobileNumber).contains("@") || EditTextUtils.getText(inputEmailIdOrMobileNumber).contains(".")) &&
                 EditTextUtils.getText(inputEmailIdOrMobileNumber).length() > getResources().getInteger(R.integer.MOBILE_NO_LENGTH)) {
-            showAlert(getResources().getString(R.string.mobile_number_should_not_more_than_10));
+            ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.mobile_number_should_not_more_than_10));
             retValue = false;
         } else if (EditTextUtils.getText(inputEmailIdOrMobileNumber).length() > 0 && EditTextUtils.isNumeric(EditTextUtils.getText(inputEmailIdOrMobileNumber)) &&
                 !(EditTextUtils.getText(inputEmailIdOrMobileNumber).contains("@") || EditTextUtils.getText(inputEmailIdOrMobileNumber).contains("."))
                 && EditTextUtils.getText(inputEmailIdOrMobileNumber).startsWith("0")) {
-            showAlert(getResources().getString(R.string.invalid_mobile_number_starts_with_zero));
+            ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.invalid_mobile_number_starts_with_zero));
             retValue = false;
         }
         else {
@@ -237,7 +237,7 @@ public class ForgotPasswordFrag extends Fragment {
                                     }
                                     if (status > 0) {
                                         String errorMsg = sellerLoginDTO.getMessageDescription();
-                                        showAlert(errorMsg);
+                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
                                     } else {
                                         LOG.d("", sellerLoginDTO.toString());
                                         try {
@@ -249,29 +249,29 @@ public class ForgotPasswordFrag extends Fragment {
 
                                         } catch (Exception e) {
                                             e.printStackTrace();
-                                            showAlert(e.getLocalizedMessage());
+                                            ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
                                         }
                                     }
                                 } else {
-                                    showAlert(getResources().getString(R.string.unable_to_process));
+                                    ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.unable_to_process));
                                 }
                             } catch (IOException ioe) {
-                                showAlert("Server Unreachable. Please try after some time.");
+                                ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time.");
                             } catch (NhanceException e) {
-                                showAlert("Server Unreachable. Please try after some time.");
+                                ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time.");
                             }
                         } else if (responseCode == 404 || responseCode == 503) {
                             LOG.d(TAG, "Server Unreachable. Please try after some time");
-                            showAlert("Server Unreachable. Please try after some time.");
+                            ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time.");
                         } else if (responseCode == 500) {
                             LOG.d(TAG, "Internal server error.");
-                            showAlert("Error while communicating with server, please contact administrator.");
+                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                         } else {
-                            showAlert("Error while communicating with server, please contact administrator.");
+                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                         }
 
                     } else {
-                        showAlert("Error while communicating with server, please contact administrator.");
+                        ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                     }
                 }
 
@@ -285,10 +285,10 @@ public class ForgotPasswordFrag extends Fragment {
             RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.OTP_REQUEST_URL, JSONAdaptor.toJSON(sellerLoginDTO), call);
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert("Unable to process your request. Please try again.");
+            ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
         } catch (NhanceException e) {
             e.printStackTrace();
-            showAlert("Unable to process your request. Please try again.");
+            ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
         }
     }
 }

@@ -7,7 +7,6 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatEditText;
@@ -156,7 +155,7 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
                 @Override
                 public void onFailure(Call call, IOException e) {
                     showProgress(false);
-                    showAlert("Unable to process your request. Please try again.");
+                    ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
                 }
 
                 @Override
@@ -177,7 +176,7 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
                                     }
                                     if (status > 0) {
                                         String errorMsg = masterDataDTO.getMessageDescription();
-                                        showAlert(errorMsg);
+                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
                                     } else {
 
                                         List<ServiceRequestInvoiceDTO> serviceRequestInvoiceDTOList = masterDataDTO.getInvoiceHistory();
@@ -192,25 +191,25 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
                                         moveToDashboard();
                                     }
                                 } else {
-                                    showAlert( getResources().getString(R.string.unable_to_process));
+                                    ((BaseFragmentActivity)getActivity()).showAlert( getResources().getString(R.string.unable_to_process));
                                 }
                             } catch (IOException ioe) {
-                                showAlert("Unable to process your request. Please try again.");
+                                ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
                             } catch (NhanceException e) {
-                                showAlert("Unable to process your request. Please try again.");
+                                ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
                             }
                         } else if (responseCode == 404 || responseCode == 503) {
                             LOG.d(TAG, "Server Unreachable. Please try after some time");
-                            showAlert("Server Unreachable. Please try after some time");
+                            ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time");
                         } else if (responseCode == 500) {
                             LOG.d(TAG, "Internal server error.");
-                            showAlert("Error while communicating with server, please contact administrator.");
+                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                         } else {
-                            showAlert("Error while communicating with server, please contact administrator.");
+                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                         }
 
                     } else {
-                        showAlert("Error while communicating with server, please contact administrator.");
+                        ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                     }
                 }
 
@@ -223,10 +222,10 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
             RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.SYNC_REQ, JSONAdaptor.toJSON(serviceRequestInvoiceDTO), call);
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert(e.getLocalizedMessage());
+            ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
         } catch (NhanceException e) {
             e.printStackTrace();
-            showAlert(e.getLocalizedMessage());
+            ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
         }
     }
 
@@ -275,36 +274,36 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
                                     }
                                     if (status > 0) {
                                         String errorMsg = sellerLoginDTO.getMessageDescription();
-                                        showAlert(errorMsg);
+                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
                                     } else {
                                         LOG.d("", sellerLoginDTO.toString());
                                         try {
                                             getActivity().finish();
                                         } catch (Exception e) {
                                             e.printStackTrace();
-                                            showAlert(e.getLocalizedMessage());
+                                            ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
                                         }
                                     }
                                 } else {
-                                    showAlert(getResources().getString(R.string.unable_to_process));
+                                    ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.unable_to_process));
                                 }
                             } catch (IOException ioe) {
-                                showAlert("Server Unreachable. Please try after some time.");
+                                ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time.");
                             } catch (NhanceException e) {
-                                showAlert("Server Unreachable. Please try after some time.");
+                                ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time.");
                             }
                         } else if (responseCode == 404 || responseCode == 503) {
                             LOG.d(TAG, "Server Unreachable. Please try after some time");
-                            showAlert("Server Unreachable. Please try after some time.");
+                            ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time.");
                         } else if (responseCode == 500) {
                             LOG.d(TAG, "Internal server error.");
-                            showAlert("Error while communicating with server, please contact administrator.");
+                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                         } else {
-                            showAlert("Error while communicating with server, please contact administrator.");
+                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                         }
 
                     } else {
-                        showAlert("Error while communicating with server, please contact administrator.");
+                        ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                     }
                 }
 
@@ -324,10 +323,10 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
             RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.CHANGE_PASSWORD_URL, JSONAdaptor.toJSON(sellerLoginDTO), call);
         } catch (IOException e) {
             e.printStackTrace();
-            showAlert("Unable to process your request. Please try again.");
+            ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
         } catch (NhanceException e) {
             e.printStackTrace();
-            showAlert("Unable to process your request. Please try again.");
+            ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
         }
     }
 
@@ -353,15 +352,15 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
         return v;
     }
 
-    private void showAlert(String message){
+    /*private void showAlert(String message){
         Snackbar snackbar = Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_LONG);
         snackbar.show();
-    }
+    }*/
 
     private void validateAndProceed(){
 
         if (((BaseFragmentActivity)getActivity()).getmSystemService().getActiveNetworkInfo() == null) {
-            showAlert(getString(R.string.network_error));
+            ((BaseFragmentActivity)getActivity()).showAlert(getString(R.string.network_error));
             return;
         }
 
@@ -380,27 +379,27 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
         View focusView = null;
 
         if(input_current_password.getText().toString().trim().length() == 0 ) {
-            showAlert(getResources().getString(R.string.please_enter_old_password));
+            ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.please_enter_old_password));
             retValue = false;
             focusView = input_current_password;
         }
         else if(input_current_password.getText().toString().trim().length() >0 && input_current_password.getText().toString().trim().length()<6 ) {
-            showAlert(getResources().getString(R.string.password_should_be_of_length));
+            ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.password_should_be_of_length));
             retValue = false;
             focusView = input_current_password;
         }
         else if(newPswdeET.getText().toString().trim().length() == 0 ) {
-            showAlert(getResources().getString(R.string.please_enter_new_password));
+            ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.please_enter_new_password));
             retValue = false;
             focusView = newPswdeET;
         }
         else if(newPswdeET.getText().toString().trim().length() >0 && newPswdeET.getText().toString().trim().length()<6 ) {
-            showAlert(getResources().getString(R.string.password_should_be_of_length));
+            ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.password_should_be_of_length));
             retValue = false;
             focusView = newPswdeET;
         }
         else if((newPswdeET.getText().toString().trim().length() > 0 && input_current_password.getText().toString().trim().length() > 0) && (newPswdeET.getText().toString().trim().equals(input_current_password.getText().toString().trim()))) {
-            showAlert(getResources().getString(R.string.old_password_and_new_password_should_not_be_same));
+            ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.old_password_and_new_password_should_not_be_same));
             retValue = false;
             focusView = newPswdeET;
         }

@@ -52,7 +52,7 @@ import java.util.Map;
 /**
  * Created by afsar on 07-Oct-15.
  */
-public class BaseFragmentActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks{
+public abstract class BaseFragmentActivity extends AppCompatActivity implements NavigationDrawerFragment.NavigationDrawerCallbacks, DialogInterface.OnClickListener{
 
 
     public static final String TAG = BaseFragmentActivity.class.getName();
@@ -111,6 +111,12 @@ public class BaseFragmentActivity extends AppCompatActivity implements Navigatio
     private TextView toolbarTitle;
     private TextView toolbarSubtitle;
     private AppCompatImageView mToolbarLogo;
+    private String mScreenTitle;
+
+    public void setContentView(int layoutResID, String screenTitle){
+        setContentView(layoutResID);
+        mScreenTitle = screenTitle;
+    }
 
     protected void onCreate(Bundle savedInstanceState) {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
@@ -182,7 +188,7 @@ public class BaseFragmentActivity extends AppCompatActivity implements Navigatio
     @Override
     public void onNavigationDrawerItemSelected(int position) {
 
-         if(position == 0)
+        if(position == 0)
         {
             Intent intent = new Intent(this, ChangePasswordActivity.class);
             startActivity(intent);
@@ -328,5 +334,53 @@ public class BaseFragmentActivity extends AppCompatActivity implements Navigatio
         mNavigationDrawerFragment.setUp(
                 R.id.navigation_drawer,
                 (DrawerLayout) findViewById(R.id.drawer_layout), toolbar, screenTitle, screenSubTitle);
+    }
+
+    private String mPositiveButtonText,mNegativeButtonText;
+    public byte mAlertCode = -1;
+    public final byte defaultCode = 0;
+
+    public void showAlert(String messageToDisplay, String positiveButtonText, String negativeButtonText, byte alertCode){
+
+        mPositiveButtonText = positiveButtonText;
+        mNegativeButtonText = negativeButtonText;
+        mAlertCode = alertCode;
+
+        if(mScreenTitle == null || (mScreenTitle != null && mScreenTitle.length() == 0))
+            mScreenTitle = getResources().getString(R.string.alert);
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(BaseFragmentActivity.this);
+        dialog.setCancelable(false);
+        dialog.setTitle(mScreenTitle);
+        dialog.setMessage(messageToDisplay);
+
+        if(mPositiveButtonText != null && mPositiveButtonText.length() > 0){
+            dialog.setPositiveButton(mPositiveButtonText, BaseFragmentActivity.this);
+        }
+        if(mPositiveButtonText != null && mPositiveButtonText.length() > 0){
+            dialog.setNegativeButton(mNegativeButtonText, BaseFragmentActivity.this);
+        }
+
+        final AlertDialog alert = dialog.create();
+        alert.show();
+    }
+
+    public void showAlert(String messageToDisplay){
+
+        mPositiveButtonText = null;
+        mNegativeButtonText = null;
+        mAlertCode = 0;
+
+        if(mScreenTitle == null || (mScreenTitle != null && mScreenTitle.length() == 0))
+            mScreenTitle = getResources().getString(R.string.alert);
+
+        AlertDialog.Builder dialog = new AlertDialog.Builder(BaseFragmentActivity.this);
+        dialog.setCancelable(false);
+        dialog.setTitle(mScreenTitle);
+        dialog.setMessage(messageToDisplay);
+        dialog.setPositiveButton(getResources().getString(R.string.ok), BaseFragmentActivity.this);
+
+        final AlertDialog alert = dialog.create();
+        alert.show();
     }
 }

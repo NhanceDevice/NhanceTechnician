@@ -17,8 +17,9 @@
     <color name="transparent">#00000000</color>
     <color name="error">#FF4081</color>
     <color name="toolbar_bg_color">#ff141414</color><!--#000000-->
-    <color name="tab_layout_bg_color">#801c1c1d</color><!--#0C0C0C-->
+    <color name="tab_layout_bg_color">@color/colorPrimaryDark</color><!--#0C0C0C-->
     <color name="space_white">#ffffff</color>
     <color name="dark_grey_color">#4a636f</color>
     <color name="greyed_out_button">#696969</color>
+    <color name="tab_indicator_color">@color/colorAccent</color>
 </resources>

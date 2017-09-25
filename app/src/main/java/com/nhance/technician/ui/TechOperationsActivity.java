@@ -1,7 +1,10 @@
 package com.nhance.technician.ui;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
@@ -12,6 +15,7 @@ import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
 import android.widget.FrameLayout;
+import android.widget.LinearLayout;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
@@ -45,7 +49,8 @@ public class TechOperationsActivity extends BaseFragmentActivity {
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_fragment_container);
+
+        setContentView(R.layout.activity_fragment_container, getResources().getString(R.string.app_name));
 
         setUpNavigationDrawer(getString(R.string.app_name), (FrameLayout) findViewById(R.id.container));
 
@@ -60,6 +65,7 @@ public class TechOperationsActivity extends BaseFragmentActivity {
 
         tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(tabViewPager);
+        addDivider();
 
         boolean isTokenSentToServer = AccessPreferences.get(NhanceApplication.getContext(), ApplicationConstants.SENT_TOKEN_TO_SERVER, false);
 
@@ -71,11 +77,44 @@ public class TechOperationsActivity extends BaseFragmentActivity {
         }
     }
 
+    private void addDivider(){
+//        https://stackoverflow.com/questions/32776270/is-there-a-way-to-add-vertical-line-between-each-tab-in-tablayout
+        LinearLayout linearLayout = (LinearLayout)tabLayout.getChildAt(0);
+        linearLayout.setShowDividers(LinearLayout.SHOW_DIVIDER_MIDDLE);
+        GradientDrawable drawable = new GradientDrawable();
+        drawable.setColor(Color.GRAY);
+        drawable.setSize(1, 1);
+        linearLayout.setDividerPadding(20);
+        linearLayout.setDividerDrawable(drawable);
+    }
+
     private void setupViewPager(ViewPager viewPager) {
         ViewPagerAdapter adapterTab = new ViewPagerAdapter(getSupportFragmentManager());
         adapterTab.addFragment(rootFragment = new RootFragment(), (mContext.getResources().getStringArray(R.array.pagetitle))[0]);
         adapterTab.addFragment(serviceHistorySectionFragment = new ServiceHistorySectionFragment(), (mContext.getResources().getStringArray(R.array.pagetitle))[1]);
         viewPager.setAdapter(adapterTab);
+    }
+
+    @Override
+    public void onClick(DialogInterface dialog, int which) {
+        switch (mAlertCode){
+            case defaultCode:
+            {
+                switch (which){
+                    case DialogInterface.BUTTON_POSITIVE:
+                    {
+                        dialog.dismiss();
+                        break;
+                    }
+                    case DialogInterface.BUTTON_NEGATIVE:
+                    {
+                        dialog.dismiss();
+                        break;
+                    }
+                }
+                break;
+            }
+        }
     }
 
     class ViewPagerAdapter extends FragmentPagerAdapter {

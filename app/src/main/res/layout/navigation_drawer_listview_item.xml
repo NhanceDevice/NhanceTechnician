@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical"
             android:text="@string/navigation_drawe_list_item"
-            android:textColor="@android:color/white"
+            android:textColor="@color/colorAccent"
             android:fontFamily="light"
             android:textSize="@dimen/title_text_size"/>
 </LinearLayout>

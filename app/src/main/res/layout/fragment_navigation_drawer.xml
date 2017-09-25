@@ -7,71 +7,71 @@
     android:layout_width="match_parent"
     android:background="@color/background"
     android:layout_height="match_parent">
-    <android.support.v7.widget.CardView
-        xmlns:card_view="http://schemas.android.com/apk/res-auto"
+
+    <RelativeLayout
+        android:id="@+id/profile_pic_main_ll"
         android:layout_width="match_parent"
         android:layout_height="100dp"
-        android:id="@+id/elevation_view"
-        card_view:cardBackgroundColor="@color/black_10"
-        card_view:cardUseCompatPadding="true"
-        card_view:cardElevation="4dp"
-        card_view:cardCornerRadius="3dp">
+        android:clickable="true"
+        android:visibility="visible">
+
         <RelativeLayout
-            android:id="@+id/profile_pic_main_ll"
-            android:layout_width="match_parent"
-            android:layout_height="100dp"
-            android:clickable="true"
-            android:visibility="visible">
+            android:id="@+id/profile_pic_sub_main_ll"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:paddingLeft="@dimen/profile_management_scrollview_margin">
 
-            <RelativeLayout
-                android:id="@+id/profile_pic_sub_main_ll"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:paddingLeft="@dimen/profile_management_scrollview_margin">
-
-                <com.nhance.technician.ui.custom.CircularImageView
-                    android:id="@+id/profile_pic_imageview"
-                    style="@style/profile_pic_navigation_drawer_imageview_style"
-                    app:civ_border="true"
-                    app:civ_borderColor="#FFFFFFFF"
-                    app:civ_borderWidth="4dp"
-                    app:civ_selector="true"
-                    app:civ_selectorColor="#4403a9f4"
-                    app:civ_selectorStrokeColor="#aa5677fc"
-                    app:civ_selectorStrokeWidth="4dp"
-                    android:layout_alignParentLeft="true"
-                    app:civ_shadow="true"/>
-            </RelativeLayout>
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:layout_toRightOf="@+id/profile_pic_sub_main_ll"
-                android:gravity="center_vertical"
-                android:paddingLeft="@dimen/activity_horizontal_margin"
-                android:orientation="vertical">
-
-                <android.support.v7.widget.AppCompatTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/profile_management_name"
-                    android:text="@string/name_lable"
-                    android:textColor="@color/white"
-                    android:fontFamily="light"
-                    android:textSize="@dimen/title_text_size" />
-
-                <android.support.v7.widget.AppCompatTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/profile_management_mobile_number"
-                    android:text="@string/phone_number_title"
-                    android:fontFamily="light"
-                    android:textColor="@color/white"
-                    android:textSize="@dimen/spinner_text_size" />
-
-            </LinearLayout>
+            <com.nhance.technician.ui.custom.CircularImageView
+                android:id="@+id/profile_pic_imageview"
+                style="@style/profile_pic_navigation_drawer_imageview_style"
+                app:civ_border="true"
+                app:civ_borderColor="#FFFFFFFF"
+                app:civ_borderWidth="4dp"
+                app:civ_selector="true"
+                app:civ_selectorColor="#4403a9f4"
+                app:civ_selectorStrokeColor="#aa5677fc"
+                app:civ_selectorStrokeWidth="4dp"
+                android:layout_alignParentLeft="true"
+                app:civ_shadow="true"/>
         </RelativeLayout>
-    </android.support.v7.widget.CardView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_toRightOf="@+id/profile_pic_sub_main_ll"
+            android:gravity="center_vertical"
+            android:paddingLeft="@dimen/activity_horizontal_margin"
+            android:orientation="vertical">
+
+            <android.support.v7.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/profile_management_name"
+                android:text="@string/name_lable"
+                android:textColor="@color/colorAccent"
+                android:fontFamily="light"
+                android:textSize="@dimen/title_text_size" />
+
+            <android.support.v7.widget.AppCompatTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:id="@+id/profile_management_mobile_number"
+                android:text="@string/phone_number_title"
+                android:fontFamily="light"
+                android:textColor="@color/colorAccent"
+                android:textSize="@dimen/spinner_text_size" />
+
+        </LinearLayout>
+    </RelativeLayout>
+
+    <View
+        android:id="@+id/view_seperator"
+        android:layout_marginRight="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_below="@+id/profile_pic_main_ll"
+        android:background="@color/dark_grey_color"
+        android:layout_width="match_parent"
+        android:layout_height="1dp"/>
 
     <android.support.v7.widget.AppCompatTextView
         android:id="@+id/copyright_tv"
@@ -81,7 +81,7 @@
         android:layout_marginBottom="1dp"
         android:gravity="center"
         android:textAllCaps="false"
-        android:textColor="@color/translucent_black"
+        android:textColor="@color/colorAccent"
         android:textSize="@dimen/text_small" />
 
     <android.support.v7.widget.AppCompatTextView
@@ -92,13 +92,13 @@
         android:layout_marginBottom="@dimen/default_gap"
         android:gravity="center"
         android:textAllCaps="false"
-        android:textColor="@color/translucent_black"
+        android:textColor="@color/colorAccent"
         android:textSize="@dimen/text_small" />
 
 
     <ListView android:layout_width="match_parent"
         android:id="@+id/drawer_list_view"
-        android:layout_below="@+id/elevation_view"
+        android:layout_below="@+id/view_seperator"
         android:layout_above="@+id/copyright_tv"
         android:divider="@null"
         android:dividerHeight="0dp"
