@@ -13,9 +13,9 @@ public class ChangePasswordActivity extends BaseFragmentActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_change_password, getResources().getString(R.string.reset_password_label));
+        setContentView(R.layout.activity_change_password, getResources().getString(R.string.change_password_label));
 
-        setUpNavigationDrawer(getString(R.string.reset_password_label), null, (FrameLayout) findViewById(R.id.container), false);
+        setUpNavigationDrawer(getString(R.string.change_password_label), null, (FrameLayout) findViewById(R.id.container), false);
 
         ChangePasswordFrag changePasswordFrag = new ChangePasswordFrag();
         FragmentManager fragmentManager = getSupportFragmentManager();
@@ -27,6 +27,16 @@ public class ChangePasswordActivity extends BaseFragmentActivity {
     @Override
     public void onClick(DialogInterface dialog, int which) {
         switch (mAlertCode){
+            case AlertCode.CHANGE_PASSWORD_SUCCESS:{
+                try {
+                    dialog.dismiss();
+                    finish();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                    showAlert(e.getLocalizedMessage());
+                }
+                break;
+            }
             case defaultCode:
             {
                 switch (which){

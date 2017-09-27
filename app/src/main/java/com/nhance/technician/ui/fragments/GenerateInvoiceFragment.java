@@ -5,12 +5,12 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.IdRes;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
+import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.AppCompatAutoCompleteTextView;
+import android.support.v7.widget.AppCompatSpinner;
 import android.support.v7.widget.AppCompatTextView;
-import android.support.v7.widget.LinearLayoutManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -20,24 +20,26 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RadioGroup;
-import android.widget.Toast;
+import android.widget.TextView;
 
 import com.nhance.technician.R;
 import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.model.ServicePartDTO;
 import com.nhance.technician.model.ServiceRequestDTO;
-import com.nhance.technician.ui.TechOperationsActivity;
-import com.nhance.technician.ui.custom.adapter.PartDetailsAdapter;
-import com.nhance.technician.util.NonCollapsibleRecyclerView;
+import com.nhance.technician.ui.BaseFragmentActivity;
 import com.nhance.technician.util.TypefaceUtils.TypefaceHelper;
 import com.nhance.technician.util.Util;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -54,11 +56,9 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
             taxNameACTV, taxAmountACTV, taxAmountCurrencySymbolACTV;
     LinearLayout partsInstalledLL, modeOfPaymentRGLL;
     private RadioGroup newPartsInstalledRG, modeOfPaymentRG;
-    LinearLayout partsDetailsContainerLL;
-    NonCollapsibleRecyclerView partDetailsContainerRV;
-    double totalAmount, netPayableAmount, discountAmount, additionalLabourCharge, taxAmount = 0D;
+    private LinearLayout partsDetailsMainContainerLL, partDetailsContainerll;
+    double cumulativeAmountPaidAgainstParts, netPayableAmount, discountAmount, additionalLabourCharge, taxAmount = 0D;
     private ImageButton addPartRowButton;
-    private PartDetailsAdapter partDetailsAdapter;
     private List<ServicePartDTO> selectedPartList = null;
     private ServiceRequestDTO serviceRequestDTO;
     private Integer selectedModeOfPayment = MODE_OF_PAYMENT_CASH;
@@ -121,36 +121,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
             @Override
             public void onClick(View v) {
                 hideSoftKeyPad();
-                int index = partDetailsContainerRV.getLayoutManager().getChildCount();
-                String input = "";
-                AppCompatAutoCompleteTextView et;
-                boolean isServicePart = false;
-                if (partDetailsContainerRV != null) {
-                    View view = partDetailsContainerRV.getChildAt(index - 1);
-                    if (view != null) {
-                        et = (AppCompatAutoCompleteTextView) view.findViewById(R.id.partname_actv);
-                        input = et.getText().toString().trim();
-                    }
-                }
-                List<ServicePartDTO> servicePartsList = serviceRequestDTO.getParts();
-                for (int i = 0; i < servicePartsList.size(); i++) {
-                    if (servicePartsList.get(i).getPartName().trim().equalsIgnoreCase(input)) {
-                        isServicePart = true;
-                    }
-                }
-                if (isServicePart) {
-                    /*int position = partDetailsAdapter.setRowIndex();
-                    partDetailsAdapter.addItemToPartDetailsMap(position);*/
-                    List<Integer> rowIndex = partDetailsAdapter.getRowIndex();
-                    int rowIndxCount = rowIndex.size();
-                    rowIndex.add(rowIndxCount);
-                    partDetailsAdapter = new PartDetailsAdapter(getActivity(), serviceRequestDTO.getParts(), rowIndex,
-                            serviceRequestDTO.getCurrencyCode(), GenerateInvoiceFragment.this, partDetailsAdapter.getPartDetailsMap());
-                    partDetailsContainerRV.setAdapter(partDetailsAdapter);
-                    //showSoftKeyPad();
-                } else {
-                    Toast.makeText(getActivity(), "Part doesn't exists.", Toast.LENGTH_SHORT).show();
-                }
+                addPartRowToParentLayout();
             }
         });
         serviceReqChargesHeaderACTV.setText(String.format(getResources().getString(R.string.instllation_charges), serviceRequestDTO.getServiceRequestSubject()));
@@ -176,7 +147,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                 } else {
                     discountAmount = 0;
                 }
-                double tempAmount = totalAmount - discountAmount;
+                double tempAmount = cumulativeAmountPaidAgainstParts - discountAmount;
                 if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
                     int taxPercentage = serviceRequestDTO.getTaxPercentage();
                     taxAmount = tempAmount * ((float) taxPercentage / 100);
@@ -207,13 +178,13 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
             public void afterTextChanged(Editable s) {
                 String additionalLabourChargeAmountStr = s.toString();
                 if (additionalLabourChargeAmountStr != null && additionalLabourChargeAmountStr.length() > 0 && additionalLabourChargeAmountStr.matches("\\d+")) {
-                    totalAmount = totalAmount - additionalLabourCharge;
+                    cumulativeAmountPaidAgainstParts = cumulativeAmountPaidAgainstParts - additionalLabourCharge;
                     additionalLabourCharge = Double.parseDouble(additionalLabourChargeAmountStr);
-                    totalAmount = totalAmount + additionalLabourCharge;
-                    if (totalAmount < 0) {
-                        totalAmount = 0;
+                    cumulativeAmountPaidAgainstParts = cumulativeAmountPaidAgainstParts + additionalLabourCharge;
+                    if (cumulativeAmountPaidAgainstParts < 0) {
+                        cumulativeAmountPaidAgainstParts = 0;
                     }
-                    double tempAmount = totalAmount - discountAmount;
+                    double tempAmount = cumulativeAmountPaidAgainstParts - discountAmount;
                     if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
                         int taxPercentage = serviceRequestDTO.getTaxPercentage();
                         taxAmount = tempAmount * ((float) taxPercentage / 100);
@@ -222,28 +193,28 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                     } else {
                         netPayableAmount = tempAmount;
                     }
-                    totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(totalAmount));
+                    totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
 
                     if (netPayableAmount < 0) {
                         netPayableAmount = 0;
                     }
                     netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
                 } else {
-                    totalAmount = totalAmount - additionalLabourCharge;
+                    cumulativeAmountPaidAgainstParts = cumulativeAmountPaidAgainstParts - additionalLabourCharge;
                     additionalLabourCharge = 0;
-                    if (totalAmount < 0) {
-                        totalAmount = 0;
+                    if (cumulativeAmountPaidAgainstParts < 0) {
+                        cumulativeAmountPaidAgainstParts = 0;
                     }
-                    double tempAmount = totalAmount - discountAmount;
+                    double tempAmount = cumulativeAmountPaidAgainstParts - discountAmount;
                     if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
                         int taxPercentage = serviceRequestDTO.getTaxPercentage();
                         taxAmount = tempAmount * ((float) taxPercentage / 100);
-                        netPayableAmount = totalAmount + taxAmount;
+                        netPayableAmount = cumulativeAmountPaidAgainstParts + taxAmount;
                         taxAmountACTV.setText(Util.getFormattedAmount(taxAmount));
                     } else {
                         netPayableAmount = tempAmount;
                     }
-                    totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(totalAmount));
+                    totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
 
                     if (netPayableAmount < 0) {
                         netPayableAmount = 0;
@@ -256,21 +227,9 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
         netPayableAmountACTV = (AppCompatTextView) rootView.findViewById(R.id.net_payable_amount_tv);
         partsInstalledLL = (LinearLayout) rootView.findViewById(R.id.part_installed_rg_ll);
         modeOfPaymentRGLL = (LinearLayout) rootView.findViewById(R.id.mode_of_payment_rg_ll);
-        partsDetailsContainerLL = (LinearLayout) rootView.findViewById(R.id.part_details_container_ll);
-        partDetailsContainerRV = (NonCollapsibleRecyclerView) rootView.findViewById(R.id.part_details_container_rv);
-        partDetailsContainerRV.setHasFixedSize(true);
-        LinearLayoutManager layout = new LinearLayoutManager(getActivity(),
-                LinearLayoutManager.VERTICAL, false) {
-            @Override
-            public boolean canScrollVertically() {
-                return false;
-            }
-        };
-        partDetailsContainerRV.setLayoutManager(layout);
-        partDetailsContainerRV.setDescendantFocusability(ViewGroup.FOCUS_BEFORE_DESCENDANTS);
-        if (partDetailsContainerRV.getChildCount() > 0) {
-            partDetailsContainerRV.removeAllViews();
-        }
+        partsDetailsMainContainerLL = (LinearLayout) rootView.findViewById(R.id.part_details_container_ll);
+        partDetailsContainerll = (LinearLayout) rootView.findViewById(R.id.part_details_container_rv);
+
         if (serviceRequestDTO != null) {
             if (serviceRequestDTO.getTaxName() != null) {
                 taxNameACTV.setText(serviceRequestDTO.getTaxName());
@@ -286,18 +245,18 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
             }
             if (serviceRequestDTO.getAmount() != null) {
                 installationChargesACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(serviceRequestDTO.getAmount()));
-                totalAmount = serviceRequestDTO.getAmount();
+                cumulativeAmountPaidAgainstParts = serviceRequestDTO.getAmount();
                 double tempAmount = 0D;
                 if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
                     int taxPercentage = serviceRequestDTO.getTaxPercentage();
-                    taxAmount = totalAmount * ((float) taxPercentage / 100);
-                    tempAmount = totalAmount + taxAmount;
+                    taxAmount = cumulativeAmountPaidAgainstParts * ((float) taxPercentage / 100);
+                    tempAmount = cumulativeAmountPaidAgainstParts + taxAmount;
                     taxAmountACTV.setText(Util.getFormattedAmount(taxAmount));
 
                 } else {
-                    tempAmount = totalAmount;
+                    tempAmount = cumulativeAmountPaidAgainstParts;
                 }
-                totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(totalAmount));
+                totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
                 netPayableAmount = tempAmount;
                 netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
             }
@@ -337,64 +296,28 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                     public void onCheckedChanged(RadioGroup group, @IdRes int checkedId) {
                         switch (checkedId) {
                             case R.id.parts_installed_yes_rb: {
-                                partsDetailsContainerLL.setVisibility(View.VISIBLE);
-                                addPartRowButton.setVisibility(View.VISIBLE);
-                                List<Integer> partRowId = new ArrayList<Integer>();
-                                partRowId.add(0);
-                                partDetailsAdapter = new PartDetailsAdapter(getActivity(), serviceRequestDTO.getParts(), partRowId, serviceRequestDTO.getCurrencyCode(), GenerateInvoiceFragment.this);
-                                partDetailsContainerRV.setAdapter(partDetailsAdapter);
-                                showSoftKeyPad();
-                                partDetailsAdapter.setPartAmountChangeListener(new PartDetailsAdapter.PartAmountChangeListener() {
-                                    @Override
-                                    public void onPartAmountChanged(List<ServicePartDTO> partDetailsMap) {
-                                        double partTotalAmount = 0;
-                                        if (partDetailsMap != null) {
-                                            selectedPartList = new ArrayList<ServicePartDTO>();
-                                            for (ServicePartDTO partDetails : partDetailsMap) {
-//                                                ServicePartDTO partDetails = entry.getValue();
-                                                selectedPartList.add(partDetails);
-                                                partTotalAmount += partDetails.getAmount();
-                                            }
-                                            totalAmount = ((serviceRequestDTO.getAmount() != null) ? serviceRequestDTO.getAmount() : 0) + partTotalAmount;
-                                            totalAmount = totalAmount + additionalLabourCharge;
-                                            double tempAmount = totalAmount - discountAmount;
-                                            if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
-                                                int taxPercentage = serviceRequestDTO.getTaxPercentage();
-                                                taxAmount = tempAmount * ((float) taxPercentage / 100);
-                                                netPayableAmount = tempAmount + taxAmount;
-                                                taxAmountACTV.setText(Util.getFormattedAmount(taxAmount));
-                                            } else {
-                                                netPayableAmount = tempAmount;
-                                            }
 
-                                            totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(totalAmount));
-                                            if (netPayableAmount < 0) {
-                                                netPayableAmount = 0;
-                                            }
-                                            netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
-                                        }
-                                    }
-                                });
+                                showSoftKeyPad();
+                                partsDetailsMainContainerLL.setVisibility(View.VISIBLE);
+                                addPartRowButton.setVisibility(View.VISIBLE);
+                                addPartRowToParentLayout();
+
                                 break;
                             }
                             case R.id.parts_installed_no_rb: {
-                                if (partDetailsAdapter != null) {
-                                    partDetailsAdapter.clearAllItems();
-                                    partDetailsAdapter = null;
-                                    /*if (partDetailsContainerRV != null) {
-                                        partDetailsContainerRV.setAdapter(null);
-                                    }*/
-                                }
-                                partsDetailsContainerLL.setVisibility(View.GONE);
+
+                                clearAllPartsRowsFromParentLayout();
+
+                                partsDetailsMainContainerLL.setVisibility(View.GONE);
                                 addPartRowButton.setVisibility(View.GONE);
                                 selectedPartList = null;
-                                totalAmount = (serviceRequestDTO.getAmount() != null) ? serviceRequestDTO.getAmount() : 0;
+                                cumulativeAmountPaidAgainstParts = (serviceRequestDTO.getAmount() != null) ? serviceRequestDTO.getAmount() : 0;
                                 if (additionalLabourCharge < 0) {
                                     additionalLabourCharge = 0;
                                 }
-                                totalAmount = totalAmount + additionalLabourCharge;
-                                totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(totalAmount));
-                                double tempAmount = totalAmount - discountAmount;
+                                cumulativeAmountPaidAgainstParts = cumulativeAmountPaidAgainstParts + additionalLabourCharge;
+                                totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
+                                double tempAmount = cumulativeAmountPaidAgainstParts - discountAmount;
                                 if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
                                     int taxPercentage = serviceRequestDTO.getTaxPercentage();
                                     taxAmount = tempAmount * ((float) taxPercentage / 100);
@@ -422,6 +345,231 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
         return rootView;
     }
 
+    private void clearAllPartsRowsFromParentLayout() {
+        if(partDetailsContainerll != null && partDetailsContainerll.getChildCount() > 0)
+            partDetailsContainerll.removeAllViews();
+        totalPartsAdded = -1;
+        cumulativeAmountPaidAgainstParts = 0D;
+        if(selectedPartsBasedOnTag != null && selectedPartsBasedOnTag.size() > 0)
+            selectedPartsBasedOnTag.clear();
+        if(selectedPartsBasedOnPartName != null && selectedPartsBasedOnPartName.size() > 0)
+            selectedPartsBasedOnPartName.clear();
+    }
+
+    private int totalPartsAdded = -1;
+
+    private Integer[] digits = new Integer[]{0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+    private String currencyCode;
+    private List<String> partNameList;
+    private Map<String, ServicePartDTO> servicePartsMap;
+    private Map<String, ServicePartDTO> selectedPartsBasedOnTag;
+    private Map<String, ServicePartDTO> selectedPartsBasedOnPartName;
+
+    private void prepareRequiredForParts(){
+
+        selectedPartsBasedOnTag = new HashMap<>();
+        selectedPartsBasedOnPartName = new HashMap<>();
+        partNameList = new ArrayList<>();
+        servicePartsMap = new HashMap<>();
+        List<ServicePartDTO> servicePartDTOList = serviceRequestDTO.getParts();
+        currencyCode = serviceRequestDTO.getCurrencyCode();
+
+        if (servicePartDTOList != null && servicePartDTOList.size() > 0) {
+            for (int index = 0; index < servicePartDTOList.size(); index++) {
+                partNameList.add(servicePartDTOList.get(index).getPartName());
+                servicePartsMap.put(servicePartDTOList.get(index).getPartName(), servicePartDTOList.get(index));
+            }
+        }
+    }
+
+    private void addPartRowToParentLayout() {
+
+        if(!isLastRowDataFilled()){
+            ((BaseFragmentActivity)getActivity()).showAlert("Part not selected or doesn't exists.");
+            return;
+        }
+
+        if(partNameList == null || servicePartsMap == null)
+            prepareRequiredForParts();
+
+        final ArrayAdapter<String> partNameAdapter = new ArrayAdapter<String>(getActivity(), R.layout.row_spn, partNameList);
+        final ArrayAdapter<Integer> digitsAdapter = new ArrayAdapter<Integer>(getActivity(), android.R.layout.simple_spinner_item, digits);
+        digitsAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+
+        final View view = LayoutInflater.from(getActivity()).inflate(R.layout.content_part_details, partDetailsContainerll, false);
+
+        totalPartsAdded++;
+        final int currentRowIndex = totalPartsAdded;
+        final String rowTag = String.valueOf(currentRowIndex);
+        view.setTag(rowTag);
+
+        final AppCompatAutoCompleteTextView partNameACTV = (AppCompatAutoCompleteTextView) view.findViewById(R.id.partname_actv);
+        final AppCompatSpinner quantityACTV = (AppCompatSpinner) view.findViewById(R.id.quantity_actv);
+
+        final TextInputEditText amountACTV = (TextInputEditText) view.findViewById(R.id.amount_actv);
+
+        partNameACTV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int pos, long id) {
+                hideSoftKeyPad();
+                String selectedPart = parent.getAdapter().getItem(pos).toString();
+                ServicePartDTO servicePartDTO = servicePartsMap.get(selectedPart);
+                ServicePartDTO oldServicePartDTO = null;
+                if(selectedPartsBasedOnTag.containsKey(rowTag)){
+                    oldServicePartDTO = selectedPartsBasedOnTag.get(rowTag);
+                }
+
+                if(oldServicePartDTO != null && oldServicePartDTO.getPartName().equalsIgnoreCase(servicePartDTO.getPartName())){
+                    //TODO: Ignore selection and reset the previous selection using oldServicePartDTO.
+                    partNameACTV.setText(servicePartDTO.getPartName());
+
+                    ((BaseFragmentActivity)getActivity()).showAlert("Same part is selected.");
+
+                }else if(selectedPartsBasedOnPartName.containsKey(selectedPart)){
+                    //TODO:If item is already selected in some other row then check for the old data of same if exists other wise set nothing.
+                    if(oldServicePartDTO != null){
+                        partNameACTV.setText(oldServicePartDTO.getPartName());
+                    }else
+                        partNameACTV.setText("");
+
+                    ((BaseFragmentActivity)getActivity()).showAlert("This part is already selected.");
+                }
+                else{
+                    if(oldServicePartDTO != null){
+                        selectedPartsBasedOnPartName.remove(oldServicePartDTO.getPartName());
+                    }
+
+                    servicePartDTO.setQuantity(1);
+                    servicePartDTO.setCalculatedAmount(servicePartDTO.getAmount());
+
+                    selectedPartsBasedOnTag.put(rowTag, servicePartDTO);
+                    selectedPartsBasedOnPartName.put(selectedPart, servicePartDTO);
+
+                    amountACTV.setText(Util.getFormattedAmount(servicePartDTO.getAmount()));
+                    quantityACTV.setSelection(1);
+                }
+            }
+        });
+
+        quantityACTV.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
+                Integer quantity = digits[pos];
+
+                ServicePartDTO oldServicePartDTO = null;
+                if(selectedPartsBasedOnTag.containsKey(rowTag)){
+                    oldServicePartDTO = selectedPartsBasedOnTag.get(rowTag);
+                }
+                if(oldServicePartDTO != null){
+                    oldServicePartDTO.setQuantity(quantity.intValue());
+
+                    double totalAmount = oldServicePartDTO.getAmount()*quantity.intValue();
+
+                    oldServicePartDTO.setCalculatedAmount(totalAmount);
+
+                    selectedPartsBasedOnTag.put(rowTag, oldServicePartDTO);
+                    selectedPartsBasedOnPartName.put(oldServicePartDTO.getPartName(), oldServicePartDTO);
+
+                    amountACTV.setText(Util.getFormattedAmount(totalAmount));
+                    partNameACTV.setText(oldServicePartDTO.getPartName());
+
+                    calculateTotalAmount();
+                }else{
+                    if(quantity.intValue() > 0)
+                        ((BaseFragmentActivity)getActivity()).showAlert("Please choose parts.");
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+        amountACTV.setKeyListener(null);
+
+        final TextView currenctCodeTV = (TextView) view.findViewById(R.id.currencycode_tv);
+        currenctCodeTV.setText(new String(Character.toChars(Integer.parseInt(currencyCode, 16))));
+
+        final ImageButton deleteButton = (ImageButton) view.findViewById(R.id.delete_button);
+        deleteButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+
+                //TODO:Get selected ServicePartDTO and service part name, total no of parts, amount.
+
+                String tag = view.getTag().toString();
+//                int selectedIndexToRemove = Integer.parseInt(tag);
+                if(selectedPartsBasedOnTag.containsKey(tag)){
+                    ServicePartDTO oldServicePartDTO = selectedPartsBasedOnTag.get(tag);
+                    selectedPartsBasedOnPartName.remove(oldServicePartDTO.getPartName());
+                    selectedPartsBasedOnTag.remove(tag);
+                    calculateTotalAmount();
+                }
+                partDetailsContainerll.removeView(view);
+            }
+        });
+
+        if(totalPartsAdded == 0){
+            deleteButton.setVisibility(View.INVISIBLE);
+        }
+
+        quantityACTV.setAdapter(digitsAdapter);
+        partNameACTV.setAdapter(partNameAdapter);
+
+        partDetailsContainerll.addView(view/*, currentRowIndex*/);
+    }
+
+    private boolean isLastRowDataFilled() {
+
+        boolean status = false;
+
+        if(partDetailsContainerll != null && partDetailsContainerll.getChildCount() > 0){
+
+            View view = partDetailsContainerll.getChildAt(partDetailsContainerll.getChildCount()-1);
+            if(view != null){
+                String rowTag = view.getTag().toString();
+                if(rowTag != null && selectedPartsBasedOnTag != null && selectedPartsBasedOnTag.containsKey(rowTag)){
+                    status = true;
+                }else
+                    status = false;
+            }
+
+        }else
+            status = true;
+
+        return status;
+    }
+
+    private void calculateTotalAmount() {
+
+        cumulativeAmountPaidAgainstParts = 0D;
+
+        if(selectedPartsBasedOnTag != null && selectedPartsBasedOnTag.size() > 0){
+
+            for (Map.Entry<String, ServicePartDTO> entry : selectedPartsBasedOnTag.entrySet()) {
+                ServicePartDTO servicePartDTO = entry.getValue();
+                cumulativeAmountPaidAgainstParts += servicePartDTO.getCalculatedAmount();
+            }
+        }
+        cumulativeAmountPaidAgainstParts+=serviceRequestDTO.getAmount();
+
+        totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
+
+        double tempAmount = 0D;
+        if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
+            int taxPercentage = serviceRequestDTO.getTaxPercentage();
+            taxAmount = (cumulativeAmountPaidAgainstParts+additionalLabourCharge-discountAmount) * ((float) taxPercentage / 100);
+            tempAmount = cumulativeAmountPaidAgainstParts + taxAmount+additionalLabourCharge-discountAmount;
+            taxAmountACTV.setText(Util.getFormattedAmount(taxAmount));
+
+        } else {
+            tempAmount = cumulativeAmountPaidAgainstParts+additionalLabourCharge-discountAmount;
+        }
+        netPayableAmount = tempAmount;
+        netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
+    }
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_gen_invoice, menu);
@@ -429,16 +577,29 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
 
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_preview) {
-            if (netPayableAmount > 0)
-                if (partDetailsAdapter.doesPartExists) {
-                    makeViewsReadyForPreview();
+            if (netPayableAmount > 0){
+
+                int checkedId = newPartsInstalledRG.getCheckedRadioButtonId();
+                if(checkedId > -1){
+                    switch (checkedId) {
+                        case R.id.parts_installed_yes_rb: {
+                            if (selectedPartsBasedOnTag!=null && selectedPartsBasedOnTag.size() > 0) {
+                                makeViewsReadyForPreview();
+                            } else {
+                                ((BaseFragmentActivity)getActivity()).showAlert("Please select a valid part name from the list.");
+                            }
+                            break;
+                        }
+                        case R.id.parts_installed_no_rb: {
+                            makeViewsReadyForPreview();
+                            break;
+                        }
+                    }
                 } else {
-                    Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Invoice can't be generated for parts doesn't exists.", Snackbar.LENGTH_LONG);
-                    snackbar.show();
+                    ((BaseFragmentActivity)getActivity()).showAlert("Please choose new parts installed or not.");
                 }
-            else {
-                Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Invoice can't be generated for Zero(0) amount.", Snackbar.LENGTH_LONG);
-                snackbar.show();
+            }else {
+                ((BaseFragmentActivity)getActivity()).showAlert("Invoice can't be generated for Zero(0) amount.");
             }
 
             return true;
@@ -447,10 +608,19 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
     }
 
     private void makeViewsReadyForPreview() {
+
+        if(selectedPartList != null)
+            selectedPartList.clear();
+
+        if(selectedPartsBasedOnTag != null && selectedPartsBasedOnTag.size() > 0)
+        {
+            selectedPartList = new ArrayList<ServicePartDTO>(selectedPartsBasedOnTag.values());
+        }
+
         FragmentTransaction trans = getFragmentManager().beginTransaction();
         InvoicePreviewFragment invoicePreviewFragment = new InvoicePreviewFragment();
         invoicePreviewFragment.setServiceRequestDTO(serviceRequestDTO);
-        invoicePreviewFragment.setAmounts(totalAmount, discountAmount, netPayableAmount, additionalLabourCharge, taxAmount);
+        invoicePreviewFragment.setAmounts(cumulativeAmountPaidAgainstParts, discountAmount, netPayableAmount, additionalLabourCharge, taxAmount);
         invoicePreviewFragment.setPartDetails(selectedPartList);
         invoicePreviewFragment.setModeOfPayment(selectedModeOfPayment);
         trans.add(R.id.root_frame, invoicePreviewFragment, RootFragment.FRAGMENT_TAG);

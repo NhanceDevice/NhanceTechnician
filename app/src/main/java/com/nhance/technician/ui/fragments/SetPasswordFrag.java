@@ -1,7 +1,5 @@
 package com.nhance.technician.ui.fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.os.Build;
@@ -35,6 +33,7 @@ import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.BaseFragmentActivity;
 import com.nhance.technician.ui.TechOperationsActivity;
+import com.nhance.technician.util.AccessPreferences;
 
 import java.io.IOException;
 import java.util.List;
@@ -72,8 +71,6 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
             isComingFromOTPScreen = bundle.getBoolean(ApplicationConstants.CHANGE_PASSWORD_AFTER_OTP,false);
     }
 
-    private View mProgressView;
-
     /**
      * Shows the progress UI and hides the login form.
      */
@@ -82,7 +79,7 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
-        getActivity().runOnUiThread(new Runnable() {
+        /*getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
@@ -96,13 +93,17 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
                     }
                 });
             }
-        });
+        });*/
+
+        if(show){
+            ((BaseFragmentActivity)getActivity()).showProgressDialog(getActivity(), "");
+        }else{
+            ((BaseFragmentActivity)getActivity()).dismissProgressDialog();
+        }
     }
 
     private void initViews() {
         coordinatorLayout = (CoordinatorLayout) v.findViewById(R.id.coordinatorLayout);
-
-        mProgressView = v.findViewById(R.id.login_progress);
 
         newPswdInputLay = (TextInputLayout) v.findViewById(R.id.new_pswd_input_lay);
         newPswdeET = (AppCompatEditText) v.findViewById(R.id.input_new_password);
@@ -294,6 +295,9 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
                                     } else {
                                         //Response ( SellerLoginDTO): success/failure + userCode +  sellerCode + sellerName + emailId + isdCode + mobileNumber + userName
                                         LOG.d("", sellerLoginDTO.toString());
+                                        if(sellerLoginDTO.getUserCode() == null || (sellerLoginDTO.getUserCode() != null && sellerLoginDTO.getUserCode().length() == 0))
+                                            sellerLoginDTO.setUserCode(Application.getInstance().getUserCode());
+
                                         try {
 
                                             if(!new UserProfileTable().isUserProfileDetailsExists(Application.getInstance().getMobileNumber())) {
@@ -380,6 +384,12 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
             public void onClick(View v) {
 
                 ((BaseFragmentActivity) getActivity()).hideSoftKeyPad();
+
+                if(sellerLoginDTO == null)
+                    sellerLoginDTO = new SellerLoginDTO();
+
+                sellerLoginDTO.setUserCode(Application.getInstance().getUserCode());
+
                 syncAndFetchStoredInvoices(sellerLoginDTO.getUserCode());
             }
         });
@@ -457,8 +467,16 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
 
     private void moveToDashboard(){
 
+        String loggedInMobileNumber = sellerLoginDTO.getMobileNumber();
+        if(loggedInMobileNumber == null || (loggedInMobileNumber != null && loggedInMobileNumber.length() == 0)){
+            loggedInMobileNumber = Application.getInstance().getMobileNumber();
+        }
+
+        AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.LOGGED_IN_USER, loggedInMobileNumber);
+        AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_LOGGED_IN);
+
         Intent mainIntent = new Intent(getActivity(), TechOperationsActivity.class);
-        mainIntent.putExtra("USERCODE", sellerLoginDTO.getUserCode());
+        mainIntent.putExtra("USERCODE", sellerLoginDTO == null ? Application.getInstance().getUserCode() : sellerLoginDTO.getUserCode() == null ? Application.getInstance().getUserCode() : sellerLoginDTO.getUserCode());
         getActivity().startActivity(mainIntent);
         getActivity().finish();
     }

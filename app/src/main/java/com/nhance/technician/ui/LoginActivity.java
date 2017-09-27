@@ -1,7 +1,5 @@
 package com.nhance.technician.ui;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -66,7 +64,6 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
     // UI references.
     private AutoCompleteTextView mMobileNoView;
     private AppCompatEditText mPasswordView;
-    private View mProgressView;
     private View mLoginFormView;
     private CoordinatorLayout coordinatorLayout;
     private TextInputLayout pswdInputLay;
@@ -200,7 +197,6 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
         });
 
         mLoginFormView = findViewById(R.id.login_form);
-        mProgressView = findViewById(R.id.login_progress);
 
         Integer userStatus = AccessPreferences.get(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_NEW);
         LOG.d(TAG, "User Status : userStatus : " + userStatus);
@@ -277,6 +273,13 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
      */
     private void attemptLogin() {
 
+        hideSoftKeyPad();
+
+        if (getmSystemService().getActiveNetworkInfo() == null) {
+            showAlert(getString(R.string.network_error));
+            return;
+        }
+
         // Reset errors.
         mMobileNoView.setError(null);
         mPasswordView.setError(null);
@@ -290,14 +293,16 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
 
         // Check for a valid password, if the user entered one.
         if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-            mPasswordView.setError(getString(R.string.error_invalid_password));
+//            mPasswordView.setError(getString(R.string.error_invalid_password));
+            showAlert(getString(R.string.error_invalid_password));
             focusView = mPasswordView;
             cancel = true;
         }
 
         // Check for a valid email address.
         if (TextUtils.isEmpty(mobileNo)) {
-            mMobileNoView.setError(getString(R.string.error_field_required));
+//            mMobileNoView.setError(getString(R.string.error_field_required));
+            showAlert(getString(R.string.error_field_required));
             focusView = mMobileNoView;
             cancel = true;
         }
@@ -410,7 +415,9 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                 };
                 sellerLoginDTO = new SellerLoginDTO();
                 sellerLoginDTO.setMobileNumber(mobileNo);
+                Application.getInstance().setMobileNumber(mobileNo);
                 sellerLoginDTO.setIsdCode("91");
+                Application.getInstance().setIsdCode(Integer.parseInt("91"));
                 sellerLoginDTO.setPassword(password);
                 sellerLoginDTO.setDefaultLocale("en_US");
                 sellerLoginDTO.setAppType(Application.getInstance().getApplicationType());
@@ -522,7 +529,12 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
-        runOnUiThread(new Runnable() {
+        if(show){
+            showProgressDialog(LoginActivity.this, "");
+        }else{
+            dismissProgressDialog();
+        }
+        /*runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
@@ -536,7 +548,7 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                     }
                 });
             }
-        });
+        });*/
     }
 
     @Override

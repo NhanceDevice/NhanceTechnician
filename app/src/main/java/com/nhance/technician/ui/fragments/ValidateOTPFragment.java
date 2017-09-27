@@ -1,7 +1,5 @@
 package com.nhance.technician.ui.fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
@@ -70,8 +68,6 @@ public class ValidateOTPFragment extends Fragment implements OTPAction.SMSReceiv
         }
     }
 
-    private View mProgressView;
-
     /**
      * Shows the progress UI and hides the login form.
      */
@@ -80,7 +76,7 @@ public class ValidateOTPFragment extends Fragment implements OTPAction.SMSReceiv
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
-        getActivity().runOnUiThread(new Runnable() {
+        /*getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
@@ -94,7 +90,12 @@ public class ValidateOTPFragment extends Fragment implements OTPAction.SMSReceiv
                     }
                 });
             }
-        });
+        });*/
+        if(show){
+            ((BaseFragmentActivity)getActivity()).showProgressDialog(getActivity(), "");
+        }else{
+            ((BaseFragmentActivity)getActivity()).dismissProgressDialog();
+        }
     }
 
     @Override
@@ -105,8 +106,6 @@ public class ValidateOTPFragment extends Fragment implements OTPAction.SMSReceiv
 
         screen_title_header_tv = (AppCompatTextView)fragmentview.findViewById(R.id.screen_title_header_tv);
         coordinatorLayout = (CoordinatorLayout)fragmentview.findViewById(R.id.coordinatorLayout);
-
-        mProgressView = fragmentview.findViewById(R.id.login_progress);
 
         otpET = (AutoCompleteTextView)fragmentview.findViewById(R.id.input_otp);
         otpET.setEnabled(true);

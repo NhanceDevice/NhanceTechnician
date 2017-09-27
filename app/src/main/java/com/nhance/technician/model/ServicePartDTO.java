@@ -31,6 +31,8 @@ public class ServicePartDTO extends BaseModel {
     /** The quantity. */
     private Integer quantity;
 
+    private Double calculatedAmount;
+
     public ServicePartDTO(Long partId, String partName, Double amount, int quantity) {
         this.partId = partId;
         this.partName = partName;
@@ -108,6 +110,14 @@ public class ServicePartDTO extends BaseModel {
      */
     public void setQuantity(Integer quantity) {
         this.quantity = quantity;
+    }
+
+    public Double getCalculatedAmount() {
+        return calculatedAmount;
+    }
+
+    public void setCalculatedAmount(Double calculatedAmount) {
+        this.calculatedAmount = calculatedAmount;
     }
 
     @Override

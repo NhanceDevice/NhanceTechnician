@@ -55,7 +55,7 @@
     <string name="srn">SRN</string>
     <string name="os">Android</string>
     <string name="logout">Logout</string>
-    <string name="sure_to_logout">Are you sure you want to logout?</string>
+    <string name="sure_to_logout">Do you want to Logout?</string>
     <string name="clear_ser_history">Clear Service History</string>
     <string name="sure_to_clear">Are you sure you want to clear all service history?</string>
     <string name="cancel">Cancel</string>
@@ -88,7 +88,7 @@
     <string name="please_enter_confirm_password">Please retype new password.</string>
     <string name="new_password_and_confirm_password_should_be_same">Retyped password doesn\'t match with the new password.</string>
     <string name="old_password_and_new_password_should_not_be_same">Old and new password shouldn\'t be same.</string>
-    <string name="reset_password_label">Reset Password</string>
+    <string name="change_password_label">Change Password</string>
     <string name="please_enter_a_valid_user_id">Please enter a valid Email id or Mobile No.</string>
     <string name="change_pswd_btn_label">Change</string>
     <string name="frgt_pswd_heading">Forgot Password?</string>
@@ -128,4 +128,6 @@
     <string name="ok">Ok</string>
     <string name="forgot_password">Forgot Password</string>
     <string name="set_password">Set Password</string>
+    <string name="reset_pswd_done_login_to_proceed">Your password has been reset successfully!</string>
+    <string name="password_changed_successfully">Password changed.</string>
 </resources>

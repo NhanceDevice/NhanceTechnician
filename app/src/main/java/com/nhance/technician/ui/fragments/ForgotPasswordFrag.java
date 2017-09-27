@@ -1,13 +1,9 @@
 package com.nhance.technician.ui.fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
-import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatTextView;
@@ -20,10 +16,7 @@ import android.widget.AutoCompleteTextView;
 import android.widget.Button;
 
 import com.nhance.technician.R;
-import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.NhanceApplication;
-import com.nhance.technician.datasets.GeneratedInvoiceTable;
-import com.nhance.technician.datasets.UserProfileTable;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
@@ -32,12 +25,7 @@ import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.BaseFragmentActivity;
-import com.nhance.technician.ui.LoginActivity;
-import com.nhance.technician.ui.SetPasswordActivity;
-import com.nhance.technician.ui.TechOperationsActivity;
-import com.nhance.technician.ui.action.CommonAction;
 import com.nhance.technician.ui.util.EditTextUtils;
-import com.nhance.technician.util.AccessPreferences;
 
 import java.io.IOException;
 
@@ -69,8 +57,6 @@ public class ForgotPasswordFrag extends Fragment {
 
         screen_title_header_tv = (AppCompatTextView)v.findViewById(R.id.screen_title_header_tv);
         coordinatorLayout = (CoordinatorLayout)v.findViewById(R.id.coordinatorLayout);
-
-        mProgressView = v.findViewById(R.id.login_progress);
 
         inputLayEmailIdOrMobileNumber = (TextInputLayout) v.findViewById(R.id.input_lay_email_id_or_mobile_no);
         inputEmailIdOrMobileNumber = (AutoCompleteTextView) v.findViewById(R.id.input_mobile_no);
@@ -168,8 +154,6 @@ public class ForgotPasswordFrag extends Fragment {
         return retValue;
     }
 
-    private View mProgressView;
-
     /**
      * Shows the progress UI and hides the login form.
      */
@@ -178,7 +162,7 @@ public class ForgotPasswordFrag extends Fragment {
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
-        getActivity().runOnUiThread(new Runnable() {
+        /*getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
@@ -192,7 +176,12 @@ public class ForgotPasswordFrag extends Fragment {
                     }
                 });
             }
-        });
+        });*/
+        if(show){
+            ((BaseFragmentActivity)getActivity()).showProgressDialog(getActivity(), "");
+        }else{
+            ((BaseFragmentActivity)getActivity()).dismissProgressDialog();
+        }
     }
 
     private SellerLoginDTO sellerLoginDTO = null;

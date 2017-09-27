@@ -1,7 +1,5 @@
 package com.nhance.technician.ui.fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.annotation.TargetApi;
 import android.content.Intent;
 import android.os.Build;
@@ -32,6 +30,7 @@ import com.nhance.technician.model.ServiceRequestInvoiceDTO;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
+import com.nhance.technician.ui.AlertCode;
 import com.nhance.technician.ui.BaseFragmentActivity;
 import com.nhance.technician.ui.TechOperationsActivity;
 
@@ -65,8 +64,6 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
         getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN | WindowManager.LayoutParams.SOFT_INPUT_ADJUST_RESIZE);
     }
 
-    private View mProgressView;
-
     /**
      * Shows the progress UI and hides the login form.
      */
@@ -75,27 +72,20 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
         // On Honeycomb MR2 we have the ViewPropertyAnimator APIs, which allow
         // for very easy animations. If available, use these APIs to fade-in
         // the progress spinner.
-        getActivity().runOnUiThread(new Runnable() {
+        /*getActivity().runOnUiThread(new Runnable() {
             @Override
-            public void run() {
-                int shortAnimTime = getResources().getInteger(android.R.integer.config_shortAnimTime);
-
-                mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                mProgressView.animate().setDuration(shortAnimTime).alpha(
-                        show ? 1 : 0).setListener(new AnimatorListenerAdapter() {
-                    @Override
-                    public void onAnimationEnd(Animator animation) {
-                        mProgressView.setVisibility(show ? View.VISIBLE : View.GONE);
-                    }
-                });
-            }
-        });
+            public void run() {*/
+                if(show){
+                    ((BaseFragmentActivity)getActivity()).showProgressDialog(getActivity(), "");
+                }else{
+                    ((BaseFragmentActivity)getActivity()).dismissProgressDialog();
+                }
+            /*}
+        });*/
     }
 
     private void initViews() {
         coordinatorLayout = (CoordinatorLayout) v.findViewById(R.id.coordinatorLayout);
-
-        mProgressView = v.findViewById(R.id.login_progress);
 
         newPswdInputLay = (TextInputLayout) v.findViewById(R.id.new_pswd_input_lay);
         newPswdeET = (AppCompatEditText) v.findViewById(R.id.input_new_password);
@@ -277,12 +267,7 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
                                         ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
                                     } else {
                                         LOG.d("", sellerLoginDTO.toString());
-                                        try {
-                                            getActivity().finish();
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                            ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
-                                        }
+                                        ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.password_changed_successfully), getResources().getString(R.string.ok), null, AlertCode.CHANGE_PASSWORD_SUCCESS);
                                     }
                                 } else {
                                     ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.unable_to_process));

@@ -58,10 +58,6 @@ public abstract class BaseFragmentActivity extends AppCompatActivity implements 
     public static final String TAG = BaseFragmentActivity.class.getName();
     public static Activity instance;
 
-    private ProgressDialog progressDialog = null;
-    private Handler handler;
-    private String progressMessage = null;
-
     private static final String ARG_SECTION_NUMBER = "section_number";
 
     private NavigationDrawerFragment mNavigationDrawerFragment;
@@ -340,47 +336,88 @@ public abstract class BaseFragmentActivity extends AppCompatActivity implements 
     public byte mAlertCode = -1;
     public final byte defaultCode = 0;
 
-    public void showAlert(String messageToDisplay, String positiveButtonText, String negativeButtonText, byte alertCode){
+    public void showAlert(final String messageToDisplay, final String positiveButtonText, final String negativeButtonText, final byte alertCode){
 
-        mPositiveButtonText = positiveButtonText;
-        mNegativeButtonText = negativeButtonText;
-        mAlertCode = alertCode;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mPositiveButtonText = positiveButtonText;
+                mNegativeButtonText = negativeButtonText;
+                mAlertCode = alertCode;
 
-        if(mScreenTitle == null || (mScreenTitle != null && mScreenTitle.length() == 0))
-            mScreenTitle = getResources().getString(R.string.alert);
+                if(mScreenTitle == null || (mScreenTitle != null && mScreenTitle.length() == 0))
+                    mScreenTitle = getResources().getString(R.string.alert);
 
-        AlertDialog.Builder dialog = new AlertDialog.Builder(BaseFragmentActivity.this);
-        dialog.setCancelable(false);
-        dialog.setTitle(mScreenTitle);
-        dialog.setMessage(messageToDisplay);
+                AlertDialog.Builder dialog = new AlertDialog.Builder(BaseFragmentActivity.this);
+                dialog.setCancelable(false);
+                dialog.setTitle(mScreenTitle);
+                dialog.setMessage(messageToDisplay);
 
-        if(mPositiveButtonText != null && mPositiveButtonText.length() > 0){
-            dialog.setPositiveButton(mPositiveButtonText, BaseFragmentActivity.this);
-        }
-        if(mPositiveButtonText != null && mPositiveButtonText.length() > 0){
-            dialog.setNegativeButton(mNegativeButtonText, BaseFragmentActivity.this);
-        }
+                if(mPositiveButtonText != null && mPositiveButtonText.length() > 0){
+                    dialog.setPositiveButton(mPositiveButtonText, BaseFragmentActivity.this);
+                }
+                if(mPositiveButtonText != null && mPositiveButtonText.length() > 0){
+                    dialog.setNegativeButton(mNegativeButtonText, BaseFragmentActivity.this);
+                }
 
-        final AlertDialog alert = dialog.create();
-        alert.show();
+                final AlertDialog alert = dialog.create();
+                alert.show();
+            }
+        });
     }
 
-    public void showAlert(String messageToDisplay){
+    public void showAlert(final String messageToDisplay){
 
-        mPositiveButtonText = null;
-        mNegativeButtonText = null;
-        mAlertCode = 0;
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mPositiveButtonText = null;
+                mNegativeButtonText = null;
+                mAlertCode = 0;
 
-        if(mScreenTitle == null || (mScreenTitle != null && mScreenTitle.length() == 0))
-            mScreenTitle = getResources().getString(R.string.alert);
+                if(mScreenTitle == null || (mScreenTitle != null && mScreenTitle.length() == 0))
+                    mScreenTitle = getResources().getString(R.string.alert);
 
-        AlertDialog.Builder dialog = new AlertDialog.Builder(BaseFragmentActivity.this);
-        dialog.setCancelable(false);
-        dialog.setTitle(mScreenTitle);
-        dialog.setMessage(messageToDisplay);
-        dialog.setPositiveButton(getResources().getString(R.string.ok), BaseFragmentActivity.this);
+                AlertDialog.Builder dialog = new AlertDialog.Builder(BaseFragmentActivity.this);
+                dialog.setCancelable(false);
+                dialog.setTitle(mScreenTitle);
+                dialog.setMessage(messageToDisplay);
+                dialog.setPositiveButton(getResources().getString(R.string.ok), BaseFragmentActivity.this);
 
-        final AlertDialog alert = dialog.create();
-        alert.show();
+                final AlertDialog alert = dialog.create();
+                alert.show();
+            }
+        });
+    }
+
+    private ProgressDialog progressDialog = null ;
+    private Handler handler;
+    private String progressMessage = null ;
+
+    public void showProgressDialog(final Context context, final String message)
+    {
+        handler.post( new Runnable() {
+
+            public void run() {
+
+                progressDialog = new ProgressDialog(context);
+                progressDialog.setProgressStyle(ProgressDialog.STYLE_SPINNER);
+                progressDialog.setTitle(message);
+                progressDialog.setMessage("Please wait ...");
+                progressDialog.setCancelable(false);
+                if(!isFinishing())
+                    progressDialog.show();
+            }});
+
+    }
+    public void dismissProgressDialog()
+    {
+        handler.post(new Runnable() {
+            public void run() {
+                if (progressDialog != null && progressDialog.isShowing()) {
+                    progressDialog.dismiss();
+                }
+            }
+        });
     }
 }
