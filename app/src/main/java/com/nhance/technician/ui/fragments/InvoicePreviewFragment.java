@@ -147,8 +147,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
             } else {
                 newPartsInstalledRG.check(R.id.parts_installed_no_rb);
                 partsDetailsContainerLL.setVisibility(View.INVISIBLE);
-            }
-            ;
+            };
         }
         return rootView;
     }

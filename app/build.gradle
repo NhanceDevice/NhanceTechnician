@@ -9,7 +9,7 @@ android {
         targetSdkVersion 25
         //QA Version
         versionCode 7
-        versionName "1.2.4"
+        versionName "1.2.5"
         //PROD Version
         /*versionCode 2
         versionName "1.0.0"*/
@@ -19,6 +19,9 @@ android {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            applicationVariants.all { variant ->
+                appendVersionName(variant, defaultConfig)
+            }
         }
     }
 }

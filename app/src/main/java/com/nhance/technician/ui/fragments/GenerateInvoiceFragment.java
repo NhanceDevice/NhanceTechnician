@@ -553,18 +553,19 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
             }
         }
         cumulativeAmountPaidAgainstParts+=serviceRequestDTO.getAmount();
+        cumulativeAmountPaidAgainstParts+=additionalLabourCharge;
 
         totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
 
         double tempAmount = 0D;
         if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
             int taxPercentage = serviceRequestDTO.getTaxPercentage();
-            taxAmount = (cumulativeAmountPaidAgainstParts+additionalLabourCharge-discountAmount) * ((float) taxPercentage / 100);
-            tempAmount = cumulativeAmountPaidAgainstParts + taxAmount+additionalLabourCharge-discountAmount;
+            taxAmount = (cumulativeAmountPaidAgainstParts-discountAmount) * ((float) taxPercentage / 100);
+            tempAmount = cumulativeAmountPaidAgainstParts + taxAmount-discountAmount;
             taxAmountACTV.setText(Util.getFormattedAmount(taxAmount));
 
         } else {
-            tempAmount = cumulativeAmountPaidAgainstParts+additionalLabourCharge-discountAmount;
+            tempAmount = cumulativeAmountPaidAgainstParts-discountAmount;
         }
         netPayableAmount = tempAmount;
         netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
@@ -584,7 +585,23 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                     switch (checkedId) {
                         case R.id.parts_installed_yes_rb: {
                             if (selectedPartsBasedOnTag!=null && selectedPartsBasedOnTag.size() > 0) {
-                                makeViewsReadyForPreview();
+                                boolean showErrorAlert = false;
+
+                                if(partDetailsContainerll != null && partDetailsContainerll.getChildCount() > 0){
+                                    for(int i = 0; i < partDetailsContainerll.getChildCount(); i++){
+                                        View childView = partDetailsContainerll.getChildAt(i);
+                                        String tag = childView.getTag().toString();
+                                        if(!selectedPartsBasedOnTag.containsKey(tag))
+                                        {
+                                            showErrorAlert = true;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if(!showErrorAlert)
+                                    makeViewsReadyForPreview();
+                                else
+                                    ((BaseFragmentActivity)getActivity()).showAlert("Please select a valid part name from the list.");
                             } else {
                                 ((BaseFragmentActivity)getActivity()).showAlert("Please select a valid part name from the list.");
                             }
