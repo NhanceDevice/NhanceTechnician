@@ -163,7 +163,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
 
         partNameTV.setText(partDetails.getPartName());
         quantityTV.setText(String.valueOf(partDetails.getQuantity()));
-        amountTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(partDetails.getAmount()));
+        amountTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount((partDetails.getCalculatedAmount())));
 
         partsDetailsContainerLL.addView(inflatedView);
     }
