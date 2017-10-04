@@ -4,7 +4,6 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
@@ -25,6 +24,7 @@ import com.nhance.technician.model.ServiceRequestDTO;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
+import com.nhance.technician.ui.BaseFragmentActivity;
 import com.nhance.technician.ui.TechOperationsActivity;
 
 import java.io.IOException;
@@ -69,8 +69,14 @@ public class SearchSRNFragment extends Fragment {
             @Override
             public void onClick(View view) {
 
-                fetchServiceRequestDetails();
-                ((TechOperationsActivity) getActivity()).hideSoftKeyPad();
+                if (((BaseFragmentActivity)getActivity()).getmSystemService().getActiveNetworkInfo() == null) {
+                    ((BaseFragmentActivity)getActivity()).showAlert(getString(R.string.network_error));
+                    return;
+                }
+                else{
+                    ((TechOperationsActivity) getActivity()).hideSoftKeyPad();
+                    fetchServiceRequestDetails();
+                }
             }
         });
         return rootView;
@@ -155,42 +161,41 @@ public class SearchSRNFragment extends Fragment {
                                         }
                                         if (status > 0) {
                                             String errorMsg = serviceRequestDTO.getMessageDescription();
-                                            Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), errorMsg, Snackbar.LENGTH_LONG);
-                                            snackbar.show();
+                                            ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
+
                                         } else {
                                             LOG.d("Search Response : ", serviceRequestDTO.toString());
                                             //showPartDetailsLayout();
                                             showGenerateInvoiceFragment();
-
                                         }
                                     } else {
-                                        Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), getResources().getString(R.string.unable_to_process), Snackbar.LENGTH_LONG);
-                                        snackbar.show();
+                                        ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.unable_to_process));
+
                                     }
                                 } catch (IOException ioe) {
-                                    Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Unable to process your request. Please try again.", Snackbar.LENGTH_LONG);
-                                    snackbar.show();
+                                    ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
+
 
                                 } catch (NhanceException e) {
-                                    Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Unable to process your request. Please try again.", Snackbar.LENGTH_LONG);
-                                    snackbar.show();
+                                    ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
+
                                 }
                             } else if (responseCode == 404 || responseCode == 503) {
                                 LOG.d(TAG, "Server Unreachable. Please try after some time");
-                                Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Server Unreachable. Please try after some time", Snackbar.LENGTH_LONG);
-                                snackbar.show();
+                                ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time");
+
                             } else if (responseCode == 500) {
                                 LOG.d(TAG, "Internal server error.");
-                                Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Error while communicating with server, please contact administrator.", Snackbar.LENGTH_LONG);
-                                snackbar.show();
+                                ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
+
                             } else {
-                                Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Error while communicating with server, please contact administrator.", Snackbar.LENGTH_LONG);
-                                snackbar.show();
+                                ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
+
                             }
 
                         } else {
-                            Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Error while communicating with server, please contact administrator.", Snackbar.LENGTH_LONG);
-                            snackbar.show();
+                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
+
                         }
                     }
 

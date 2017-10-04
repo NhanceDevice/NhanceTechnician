@@ -4,7 +4,6 @@ import android.annotation.TargetApi;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.AppCompatTextView;
 import android.text.Editable;
@@ -182,8 +181,7 @@ public class ValidateOTPFragment extends Fragment implements OTPAction.SMSReceiv
     }
 
     private void showAlert(String message){
-        Snackbar snackbar = Snackbar.make(coordinatorLayout, message, Snackbar.LENGTH_LONG);
-        snackbar.show();
+        ((BaseFragmentActivity)getActivity()).showAlert(message);
     }
 
     private void validateAndProceed(){

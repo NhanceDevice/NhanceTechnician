@@ -173,7 +173,10 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.action_send:
-                sendDetailsToGenerateInvoice();
+                if (((BaseFragmentActivity)getActivity()).getmSystemService().getActiveNetworkInfo() == null) {
+                    ((BaseFragmentActivity)getActivity()).showAlert(getString(R.string.network_error));
+                }else
+                    sendDetailsToGenerateInvoice();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
