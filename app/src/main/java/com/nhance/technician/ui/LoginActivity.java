@@ -285,25 +285,26 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
         mPasswordView.setError(null);
 
         // Store values at the time of the login attempt.
-        String mobileNo = mMobileNoView.getText().toString();
-        String password = mPasswordView.getText().toString();
+        String mobileNo = mMobileNoView.getText().toString().trim();
+        String password = mPasswordView.getText().toString().trim();
 
         boolean cancel = false;
         View focusView = null;
 
-        // Check for a valid password, if the user entered one.
-        if (!TextUtils.isEmpty(password) && !isPasswordValid(password)) {
-//            mPasswordView.setError(getString(R.string.error_invalid_password));
-            showAlert(getString(R.string.error_invalid_password));
-            focusView = mPasswordView;
-            cancel = true;
-        }
-
-        // Check for a valid email address.
         if (TextUtils.isEmpty(mobileNo)) {
 //            mMobileNoView.setError(getString(R.string.error_field_required));
-            showAlert(getString(R.string.error_field_required));
+            showAlert(getString(R.string.mobile_number_blank_error));
             focusView = mMobileNoView;
+            cancel = true;
+        }
+        else if (TextUtils.isEmpty(password)) {
+//            mPasswordView.setError(getString(R.string.error_invalid_password));
+            showAlert(getString(R.string.please_enter_password));
+            focusView = mPasswordView;
+            cancel = true;
+        }else if(password.length() < 6){
+            showAlert(getString(R.string.password_should_be_of_length));
+            focusView = mPasswordView;
             cancel = true;
         }
 
@@ -518,7 +519,7 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
 
     private boolean isPasswordValid(String password) {
         //TODO: Replace this with your own logic
-        return password.length() > 4;
+        return password.length() >= 6;
     }
 
     /**

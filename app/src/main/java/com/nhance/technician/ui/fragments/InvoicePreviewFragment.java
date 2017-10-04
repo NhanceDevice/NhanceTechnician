@@ -1,11 +1,8 @@
 package com.nhance.technician.ui.fragments;
 
-import android.animation.Animator;
-import android.animation.AnimatorListenerAdapter;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AlertDialog;
@@ -33,6 +30,7 @@ import com.nhance.technician.model.ServiceRequestInvoiceDTO;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
+import com.nhance.technician.ui.BaseFragmentActivity;
 import com.nhance.technician.ui.TechOperationsActivity;
 import com.nhance.technician.util.Util;
 
@@ -55,7 +53,6 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
     private double totalAmount = 0D;
     private double discountAmount = 0D;
     private double netPayableAmount = 0D;
-    private View mProgressView;
     private RelativeLayout mPartDetailsView;
     AutoCompleteTextView discountAmountACTV, additionalLabourChargeACTV;
     AppCompatTextView serviceReqNoACTV, customerNameACTV, customerMobNoACTV, installationChargesACTV,serviceReqChargesHeaderACTV,
@@ -81,7 +78,6 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_invoice_preview, container, false);
-        mProgressView = rootView.findViewById(R.id.send_progress);
         mPartDetailsView = (RelativeLayout) rootView.findViewById(R.id.part_details_input_ll);
         serviceReqNoACTV = (AppCompatTextView) mPartDetailsView.findViewById(R.id.ser_req_no_tv);
         customerNameACTV = (AppCompatTextView) mPartDetailsView.findViewById(R.id.cust_name_tv);
@@ -217,41 +213,33 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
                                     }
                                     if (status > 0) {
                                         String errorMsg = serviceRequestInvoiceDTO.getMessageDescription();
-                                        Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), errorMsg, Snackbar.LENGTH_LONG);
-                                        snackbar.show();
+                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
                                     } else {
                                         LOG.d("", serviceRequestInvoiceDTO.toString());
                                         new GeneratedInvoiceTable().storeServiceReqInvoiceDetails(serviceRequestDTO, serviceRequestInvoiceDTO,selectedModeOfPayment);
                                         showInvoiceGeneratedDialog(serviceRequestInvoiceDTO);
                                     }
                                 } else {
-                                    Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), getResources().getString(R.string.unable_to_process), Snackbar.LENGTH_LONG);
-                                    snackbar.show();
+                                    ((BaseFragmentActivity)getActivity()).showAlert( getResources().getString(R.string.unable_to_process));
                                 }
                             } catch (IOException ioe) {
-                                Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Unable to process your request. Please try again.", Snackbar.LENGTH_LONG);
-                                snackbar.show();
+                                ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
 
                             } catch (NhanceException e) {
-                                Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Unable to process your request. Please try again.", Snackbar.LENGTH_LONG);
-                                snackbar.show();
+                                ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
                             }
                         } else if (responseCode == 404 || responseCode == 503) {
                             LOG.d(TAG, "Server Unreachable. Please try after some time");
-                            Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Server Unreachable. Please try after some time", Snackbar.LENGTH_LONG);
-                            snackbar.show();
+                            ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time");
                         } else if (responseCode == 500) {
                             LOG.d(TAG, "Internal server error.");
-                            Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Error while communicating with server, please contact administrator.", Snackbar.LENGTH_LONG);
-                            snackbar.show();
+                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                         } else {
-                            Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Error while communicating with server, please contact administrator.", Snackbar.LENGTH_LONG);
-                            snackbar.show();
+                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                         }
 
                     } else {
-                        Snackbar snackbar = Snackbar.make(((TechOperationsActivity) getActivity()).getCoordinatorLayout(), "Error while communicating with server, please contact administrator.", Snackbar.LENGTH_LONG);
-                        snackbar.show();
+                        ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
                     }
                 }
 
@@ -302,7 +290,14 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
     }
 
     private void showProgress(final boolean show) {
-        getActivity().runOnUiThread(new Runnable() {
+
+        if(show){
+            ((BaseFragmentActivity)getActivity()).showProgressDialog(getActivity(), "");
+        }else{
+            ((BaseFragmentActivity)getActivity()).dismissProgressDialog();
+        }
+
+        /*getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 int shortAnimTime = getActivity().getResources().getInteger(android.R.integer.config_shortAnimTime);
@@ -315,7 +310,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
                     }
                 });
             }
-        });
+        });*/
     }
 
     public void setServiceRequestDTO(ServiceRequestDTO serviceRequestDTO) {
