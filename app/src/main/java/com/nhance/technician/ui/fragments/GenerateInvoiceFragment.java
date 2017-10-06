@@ -580,41 +580,44 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
         if (item.getItemId() == R.id.action_preview) {
             if (netPayableAmount > 0){
 
-                int checkedId = newPartsInstalledRG.getCheckedRadioButtonId();
-                if(checkedId > -1){
-                    switch (checkedId) {
-                        case R.id.parts_installed_yes_rb: {
-                            if (selectedPartsBasedOnTag!=null && selectedPartsBasedOnTag.size() > 0) {
-                                boolean showErrorAlert = false;
+                if(newPartsInstalledRG != null){
+                    int checkedId = newPartsInstalledRG.getCheckedRadioButtonId();
+                    if(checkedId > -1){
+                        switch (checkedId) {
+                            case R.id.parts_installed_yes_rb: {
+                                if (selectedPartsBasedOnTag!=null && selectedPartsBasedOnTag.size() > 0) {
+                                    boolean showErrorAlert = false;
 
-                                if(partDetailsContainerll != null && partDetailsContainerll.getChildCount() > 0){
-                                    for(int i = 0; i < partDetailsContainerll.getChildCount(); i++){
-                                        View childView = partDetailsContainerll.getChildAt(i);
-                                        String tag = childView.getTag().toString();
-                                        if(!selectedPartsBasedOnTag.containsKey(tag))
-                                        {
-                                            showErrorAlert = true;
-                                            break;
+                                    if(partDetailsContainerll != null && partDetailsContainerll.getChildCount() > 0){
+                                        for(int i = 0; i < partDetailsContainerll.getChildCount(); i++){
+                                            View childView = partDetailsContainerll.getChildAt(i);
+                                            String tag = childView.getTag().toString();
+                                            if(!selectedPartsBasedOnTag.containsKey(tag))
+                                            {
+                                                showErrorAlert = true;
+                                                break;
+                                            }
                                         }
                                     }
-                                }
-                                if(!showErrorAlert)
-                                    makeViewsReadyForPreview();
-                                else
+                                    if(!showErrorAlert)
+                                        makeViewsReadyForPreview();
+                                    else
+                                        ((BaseFragmentActivity)getActivity()).showAlert("Please select a valid part name from the list.");
+                                } else {
                                     ((BaseFragmentActivity)getActivity()).showAlert("Please select a valid part name from the list.");
-                            } else {
-                                ((BaseFragmentActivity)getActivity()).showAlert("Please select a valid part name from the list.");
+                                }
+                                break;
                             }
-                            break;
+                            case R.id.parts_installed_no_rb: {
+                                makeViewsReadyForPreview();
+                                break;
+                            }
                         }
-                        case R.id.parts_installed_no_rb: {
-                            makeViewsReadyForPreview();
-                            break;
-                        }
+                    } else {
+                        ((BaseFragmentActivity)getActivity()).showAlert("Please choose new parts installed or not.");
                     }
-                } else {
-                    ((BaseFragmentActivity)getActivity()).showAlert("Please choose new parts installed or not.");
-                }
+                }else
+                    makeViewsReadyForPreview();
             }else {
                 ((BaseFragmentActivity)getActivity()).showAlert("Invoice can't be generated for Zero(0) amount.");
             }

@@ -8,8 +8,8 @@ android {
         minSdkVersion 16
         targetSdkVersion 25
         //QA Version
-        versionCode 7
-        versionName "1.2.5"
+        versionCode 8
+        versionName "1.2.6"
         //PROD Version
         /*versionCode 2
         versionName "1.0.0"*/
