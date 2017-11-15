@@ -23,6 +23,7 @@ import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.BaseModel;
 import com.nhance.technician.model.Location;
+import com.nhance.technician.model.newapis.MessageModel;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.receiver.NetworkConnectivityReceiver;
 import com.nhance.technician.util.TypefaceUtils.TypefaceHelper;
@@ -396,13 +397,35 @@ public class NhanceApplication extends Application implements ApplicationConstan
         }
     }
 
+    private static Hashtable<String, MessageModel> modelToTakeActionNewApis = null;
+
+    public static void setModelToTakeAction(MessageModel base) {
+        if (modelToTakeActionNewApis == null) {
+            modelToTakeActionNewApis = new Hashtable<String, MessageModel>();
+        }
+        modelToTakeActionNewApis.put("ModelToTakeAction", base);
+    }
+
+    public static MessageModel getModelToTakeActions() throws NhanceException {
+        Object obj = modelToTakeActionNewApis.get("ModelToTakeAction");
+        if (null != obj) {
+            return (MessageModel) obj;
+        } else {
+            throw new NhanceException(NhanceException.BUSINESS_CONTROLLER_NOT_INITIALIZED, "Model container not initialized");
+        }
+    }
 
     public static int getVersionCode() {
         return versionCode;
     }
 
-    public static String getVersionName() {
+    public String getVersionName() {
         return versionName;
+    }
+
+    public int getApplicationType(){
+
+        return applicationType;
     }
 
     public ExceptionHandler getExceptionHandler() {

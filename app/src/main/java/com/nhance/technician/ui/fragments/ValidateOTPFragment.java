@@ -22,14 +22,19 @@ import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
-import com.nhance.technician.model.SellerLoginDTO;
+import com.nhance.technician.model.newapis.ChangePasswordModel;
+import com.nhance.technician.model.newapis.ChangePasswordModelResponse;
+import com.nhance.technician.model.newapis.ErrorMessage;
+import com.nhance.technician.model.newapis.ResponseStatus;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.BaseFragmentActivity;
+import com.nhance.technician.ui.action.CommonAction;
 import com.nhance.technician.ui.action.OTPAction;
 
 import java.io.IOException;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -202,8 +207,6 @@ public class ValidateOTPFragment extends Fragment implements OTPAction.SMSReceiv
         attemptToRequestOtp();
     }
 
-    private SellerLoginDTO sellerLoginDTO = null;
-
     private void attemptToRequestOtp() {
 
         // Show a progress spinner, and kick off a background task to
@@ -217,10 +220,7 @@ public class ValidateOTPFragment extends Fragment implements OTPAction.SMSReceiv
                 @Override
                 public void onFailure(Call call, IOException e) {
                     showProgress(false);
-                    sellerLoginDTO = null;
-                    sellerLoginDTO = new SellerLoginDTO();
-                    sellerLoginDTO.setResponseStatus(1);
-                    sellerLoginDTO.setMessageDescription("Unable to process your request. Please try again.");
+                    showAlert("Unable to process your request. Please try again.");
                 }
 
                 @Override
@@ -235,41 +235,40 @@ public class ValidateOTPFragment extends Fragment implements OTPAction.SMSReceiv
                             try {
                                 String resStr = response.body().string();
                                 LOG.d("UserLoginTask", resStr);
-                                sellerLoginDTO = JSONAdaptor.fromJSON(resStr, SellerLoginDTO.class);
+                                int status = 0;
 
-                                if (sellerLoginDTO != null) {
-                                    int status = 0;
-                                    if (sellerLoginDTO.getResponseStatus() != null) {
-                                        status = sellerLoginDTO.getResponseStatus();
+                                ChangePasswordModelResponse changePasswordModelResponse = JSONAdaptor.fromJSON(resStr, ChangePasswordModelResponse.class);
+                                ResponseStatus responseStatus = changePasswordModelResponse.getStatus();
+                                if (responseStatus != null && responseStatus.getStatusCode() != null) {
+                                    status = responseStatus.getStatusCode();
+                                }
+                                if (status > 0) {
+                                    List<ErrorMessage> errorMessages = responseStatus.getErrorMessages();
+                                    if (errorMessages != null && errorMessages.size() > 0) {
+                                        showAlert(errorMessages.get(0).getMessageDescription());
                                     }
-                                    if (status > 0) {
-                                        String errorMsg = sellerLoginDTO.getMessageDescription();
-                                        showAlert(errorMsg);
-                                    } else {
-                                        LOG.d("", sellerLoginDTO.toString());
-                                        try {
+                                }else{
+                                    try {
 
-                                            Application.getInstance().setSellerCode(sellerLoginDTO.getSellerCode());
-                                            Application.getInstance().setUserCode(sellerLoginDTO.getUserCode());
-                                            Application.getInstance().setMobileNumber(sellerLoginDTO.getMobileNumber());
+                                        ChangePasswordModel changePasswordModel = changePasswordModelResponse.getMessage();
+                                        if(changePasswordModel == null)
+                                            changePasswordModel = (ChangePasswordModel)NhanceApplication.getModelToTakeActions();
+                                        NhanceApplication.setModelToTakeAction(changePasswordModel);
 
-                                            SetPasswordFrag setPasswordFrag = new SetPasswordFrag();
+                                        SetPasswordFrag setPasswordFrag = new SetPasswordFrag();
 
-                                            Bundle fragmentBundle = new Bundle();
-                                            fragmentBundle.putBoolean(ApplicationConstants.CHANGE_PASSWORD_AFTER_OTP, true);
-                                            setPasswordFrag.setArguments(fragmentBundle);
+                                        Bundle fragmentBundle = new Bundle();
+                                        fragmentBundle.putBoolean(ApplicationConstants.CHANGE_PASSWORD_AFTER_OTP, true);
+                                        setPasswordFrag.setArguments(fragmentBundle);
 
-                                            getActivity().getSupportFragmentManager().beginTransaction()
-                                                    .replace(R.id.login_container, setPasswordFrag, SetPasswordFrag.TAG)
-                                                    .commit();
+                                        getActivity().getSupportFragmentManager().beginTransaction()
+                                                .replace(R.id.login_container, setPasswordFrag, SetPasswordFrag.TAG)
+                                                .commit();
 
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                            showAlert(e.getLocalizedMessage());
-                                        }
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        showAlert(e.getLocalizedMessage());
                                     }
-                                } else {
-                                    showAlert(getResources().getString(R.string.unable_to_process));
                                 }
                             } catch (IOException ioe) {
                                 showAlert("Server Unreachable. Please try after some time.");
@@ -290,18 +289,26 @@ public class ValidateOTPFragment extends Fragment implements OTPAction.SMSReceiv
                         showAlert("Error while communicating with server, please contact administrator.");
                     }
                 }
-
             };
-            sellerLoginDTO = new SellerLoginDTO();
 
             String otp = otpET.getText().toString().trim();
-            sellerLoginDTO.setOtp(otp);
-            sellerLoginDTO.setMobileNumber(Application.getInstance().getMobileNumber());
-            sellerLoginDTO.setIsdCode("91");
-            sellerLoginDTO.setDefaultLocale("en_US");
-            sellerLoginDTO.setAppType(Application.getInstance().getApplicationType());
-            LOG.d("Request===> ", sellerLoginDTO.toString());
-            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.VERIFY_OTP_URL, JSONAdaptor.toJSON(sellerLoginDTO), call);
+
+            ChangePasswordModel login = new ChangePasswordModel();
+            login.setOtp(otp);
+
+            if(Application.getInstance().getMobileNumber() != null)
+                login.setLoginPrincipal(Application.getInstance().getMobileNumber());
+            else if(Application.getInstance().getEmailId() != null)
+                login.setLoginPrincipal(Application.getInstance().getEmailId());
+
+            new CommonAction().addCommonRequestParameters(login);
+
+            login = (ChangePasswordModel)NhanceApplication.getModelToTakeActions();
+
+            NhanceApplication.setModelToTakeAction(login);
+
+            LOG.d("Request===> ", login.toString());
+            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.VERIFY_OTP_URL, JSONAdaptor.toJSON(login), call);
         } catch (IOException e) {
             e.printStackTrace();
             showAlert("Unable to process your request. Please try again.");

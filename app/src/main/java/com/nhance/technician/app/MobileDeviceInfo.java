@@ -2,6 +2,7 @@ package com.nhance.technician.app;
 
 import android.content.Context;
 import android.os.Build;
+import android.provider.Settings;
 
 import java.net.NetworkInterface;
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ public class MobileDeviceInfo {
 
 //    http://stackoverflow.com/questions/3596722/how-to-get-the-android-phone-model-version-sdk-details
 
-    private Context mContext;
+    private static Context mContext;
 
     private static MobileDeviceInfo mobileDeviceInfo;
 
@@ -97,7 +98,7 @@ public class MobileDeviceInfo {
     }
 
     public static String getMacAddr() {
-        try {
+       /* try {
             List<NetworkInterface> all = Collections.list(NetworkInterface.getNetworkInterfaces());
             for (NetworkInterface nif : all) {
                 if (!nif.getName().equalsIgnoreCase("wlan0")) continue;
@@ -119,6 +120,8 @@ public class MobileDeviceInfo {
             }
         } catch (Exception ex) {
         }
-        return "02:00:00:00:00:00";
+        return "02:00:00:00:00:00";*/
+        String deviceUniqueId = Settings.Secure.getString(mContext.getContentResolver(), Settings.Secure.ANDROID_ID);
+        return deviceUniqueId;
     }
 }

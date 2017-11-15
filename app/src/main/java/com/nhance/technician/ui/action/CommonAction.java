@@ -3,12 +3,15 @@ package com.nhance.technician.ui.action;
 import android.database.Cursor;
 import android.util.Log;
 
+import com.nhance.technician.R;
 import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.datasets.UserProfileTable;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.model.Application;
 import com.nhance.technician.model.BaseModel;
+import com.nhance.technician.model.newapis.ContactModel;
+import com.nhance.technician.model.newapis.MessageModel;
 import com.nhance.technician.util.AccessPreferences;
 
 /**
@@ -26,30 +29,71 @@ public class CommonAction {
         baseModel.setDefaultLocale("en_US");
     }
 
-    public void loadBasicUserDeatilsToApplicationModel(String mobileNo) throws NhanceException {
+    public void addCommonRequestParameters(MessageModel baseModel) {
+        Application application = Application.getInstance();
+        int appType = NhanceApplication.getApplication().getResources().getInteger(R.integer.application_type);
+
+        if(application.getApplicationType() != appType)
+            application.setApplicationType(appType);
+
+        baseModel.setApplicationType(application.getApplicationType());
+        baseModel.setDefaultLocale("en_US");
+        baseModel.setUserId(application.getUserProfileUserIdOrGuid());
+        baseModel.setCustomerId(application.getCustomerId());
+        baseModel.setTenantId(application.getTenantId());
+        baseModel.setApplicationVersion(Application.getInstance().getVersionNumber());
+
+        ContactModel contactModel = new ContactModel();
+
+        contactModel.setEmail(application.getEmailId());
+        contactModel.setMobile(application.getMobileNumber());
+        if(application.getIsdCode() > 0)
+            contactModel.setIsdCode(application.getIsdCode());
+
+        baseModel.setContact(contactModel);
+
+        NhanceApplication.setModelToTakeAction(baseModel);
+    }
+
+    public void loadBasicUserDeatilsToApplicationModel(String userId) throws NhanceException {
         Cursor cursor = null;
         try {
             NhanceApplication.applicationDataBase.beginTransaction();
             String sqlQuery = "select * from " + UserProfileTable.USER_PROFILE_TABLE+" where " +
-                    UserProfileTable.COLUMN_MOBILE_NO + " = '" + mobileNo+"'";
+                    UserProfileTable.COLUMN_USER_ID_OR_GUID + " = '" + userId+"'";
             cursor = NhanceApplication.applicationDataBase.getQueryResult(sqlQuery, null);
 
             if (null != cursor && cursor.moveToFirst()) {
                 do {
 
                     Application application = Application.getInstance();
-                    application.setMobileNumber(mobileNo);
+                    application.setUserProfileUserIdOrGuid(userId);
+                    int isdCode = cursor.getInt((cursor.getColumnIndex(UserProfileTable.COLUMN_ISD_CODE)));
+                    application.setIsdCode(isdCode);
+                    application.setEmailId(cursor.getString((cursor.getColumnIndex(UserProfileTable.COLUMN_SELLER_EMAIL_ID))));
                     application.setSellerCode(cursor.getString((cursor.getColumnIndex(UserProfileTable.COLUMN_SELLER_CODE))));
-                    application.setUserCode(cursor.getString((cursor.getColumnIndex(UserProfileTable.COLUMN_USER_CODE))));
+//                    application.setUserCode(cursor.getString((cursor.getColumnIndex(UserProfileTable.COLUMN_USER_CODE))));
+
+                    application.setMobileNumber(cursor.getString((cursor.getColumnIndex(UserProfileTable.COLUMN_MOBILE_NO))));
+                    application.setUserProfileUserIdOrGuid(cursor.getString(cursor.getColumnIndex(UserProfileTable.COLUMN_USER_ID_OR_GUID)));
+
                     String loggedInUserName = null;
                     StringBuffer sb = new StringBuffer();
-                    sb.append(cursor.getString((cursor.getColumnIndex(UserProfileTable.COLUMN_SELLER_NAME))));
-                    loggedInUserName = sb.toString();
-                    application.setLoggedInUserName(loggedInUserName);
+                    String sellerName = cursor.getString((cursor.getColumnIndex(UserProfileTable.COLUMN_SELLER_NAME)));
+                    if(sellerName != null && sellerName.length() > 0){
+                        sb.append(sellerName);
+                        loggedInUserName = sb.toString();
+                        application.setSellerName(loggedInUserName);
 
-                    /*String loggedInUserProfilePicPath = cursor.getString((cursor.getColumnIndex(UserProfileTable.COLUMN_PROFILE_PIC_PATH)));
-                    if(loggedInUserProfilePicPath != null && loggedInUserProfilePicPath.length() > 0 && !(loggedInUserProfilePicPath.equals("") || loggedInUserProfilePicPath.equals(" ")))
-                        application.setLoggedInUserProfilePicPath(loggedInUserProfilePicPath);*/
+                        application.setLoggedInUserName(application.getSellerName());
+                    }
+
+                    int appType = NhanceApplication.getApplication().getResources().getInteger(R.integer.application_type);
+
+                    if(application.getApplicationType() != appType)
+                        application.setApplicationType(appType);
+
+                    application.setApplicationType(NhanceApplication.getApplication().getResources().getInteger(R.integer.application_type));
 
                 } while (cursor.moveToNext());
             }

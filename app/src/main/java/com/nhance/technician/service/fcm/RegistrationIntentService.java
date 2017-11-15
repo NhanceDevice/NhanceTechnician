@@ -11,11 +11,14 @@ import com.nhance.technician.R;
 import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.MobileDeviceInfo;
 import com.nhance.technician.app.NhanceApplication;
+import com.nhance.technician.datasets.UserProfileTable;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
 import com.nhance.technician.model.BaseModel;
 import com.nhance.technician.model.SellerLoginDTO;
+import com.nhance.technician.model.newapis.MessageModel;
+import com.nhance.technician.model.newapis.UserModel;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.action.CommonAction;
@@ -45,7 +48,7 @@ import javax.net.ssl.X509TrustManager;
 /**
  * Created by afsar on 11-05-2016.
  */
-public class RegistrationIntentService extends IntentService implements RestConstants{
+public class RegistrationIntentService extends IntentService implements RestConstants {
 
     private static final String TAG = "RegIntentService";
     private static final int MAX_ATTEMPTS = 10;
@@ -77,6 +80,7 @@ public class RegistrationIntentService extends IntentService implements RestCons
     protected void onHandleIntent(Intent intent) {
 
         try {
+            String device_unique_id = MobileDeviceInfo.getMacAddr();
             boolean isCalledForDeRegisteringDeviceId = intent.getBooleanExtra(DE_REGISTER_DEVICE_ID, false);
             Integer userStatus = AccessPreferences.get(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_NEW);
             if (userStatus == ApplicationConstants.USER_LOGGED_IN) {
@@ -91,7 +95,11 @@ public class RegistrationIntentService extends IntentService implements RestCons
 
                         if (loggedInUsersMobileNo != null && loggedInUsersMobileNo.length() > 0) {
                             new CommonAction().loadBasicUserDeatilsToApplicationModel(loggedInUsersMobileNo);
-                            sendRegistrationToServer(refreshedToken);
+
+                            String userGuid = UserProfileTable.getStringColumnValue(UserProfileTable.COLUMN_USER_ID_OR_GUID,
+                                    loggedInUsersMobileNo.contains("@") ? UserProfileTable.COLUMN_SELLER_EMAIL_ID : UserProfileTable.COLUMN_MOBILE_NO, loggedInUsersMobileNo);
+
+                            sendRegistrationToServer(device_unique_id, refreshedToken, userGuid);
                         }
                     } catch (NhanceException ne) {
                         ne.printStackTrace();
@@ -105,7 +113,7 @@ public class RegistrationIntentService extends IntentService implements RestCons
 
                         if (loggedInUsersMobileNo != null && loggedInUsersMobileNo.length() > 0) {
                             new CommonAction().loadBasicUserDeatilsToApplicationModel(loggedInUsersMobileNo);
-                            sendRegistrationToServer(null);
+                            sendRegistrationToServer(null, null, null);
                         }
                     } catch (NhanceException ne) {
                         ne.printStackTrace();
@@ -113,8 +121,12 @@ public class RegistrationIntentService extends IntentService implements RestCons
                         e.printStackTrace();
                     }
                 }
-            }
+            }else{
+                String refreshedToken = FirebaseInstanceId.getInstance().getToken();
+                Log.i(TAG, "GCM Registration Token: " + refreshedToken);
 
+                sendRegistrationToServer(device_unique_id, refreshedToken, null);
+            }
         } catch (Exception e) {
             Log.d(TAG, "Failed to complete token refresh", e);
             AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.SENT_TOKEN_TO_SERVER, false);
@@ -129,16 +141,19 @@ public class RegistrationIntentService extends IntentService implements RestCons
      *
      * @param token The new token.
      */
-    private void sendRegistrationToServer(String token) {
+    private void sendRegistrationToServer(String device_unique_id, String token, String userId) {
 
 
         String serverUrl = NhanceApplication.getApplication().getBackendUrl() + RestConstants.GCM_REGISTRATION_REQ_URL;
 
-        SellerLoginDTO model = new SellerLoginDTO();
-        model.setRegistrationId(token);
-        Application application = Application.getInstance();
-        model.setSellerCode(application.getSellerCode());
-        model.setUserCode(application.getUserCode());
+        UserModel model = new UserModel();
+        model.setDeviceId(token);
+        model.setMacId(device_unique_id);
+        if(userId != null)
+            model.setUserId(userId);
+
+        model.setOs("Android");
+
         new CommonAction().addCommonRequestParameters(model);
 
         long backoff = BACKOFF_MILLI_SECONDS + random.nextInt(1000);
@@ -176,7 +191,7 @@ public class RegistrationIntentService extends IntentService implements RestCons
      * @param model    request parameters.
      * @throws IOException propagated from POST.
      */
-    private static void post(String endpoint, BaseModel model) throws IOException {
+    private static void post(String endpoint, MessageModel model) throws IOException {
 
 
         URL url;

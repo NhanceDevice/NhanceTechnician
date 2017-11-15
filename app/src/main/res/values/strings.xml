@@ -4,9 +4,10 @@
     <!-- Strings related to login -->
 
     <!--<string name="backend_url">http://192.168.0.152:8080</string>--> <!-- Local Dev Server -->
-    <string name="backend_url">https://qa.nhancenow.com</string><!-- Digital Ocean QA Server Public IP HTTPS-->
+    <!--<string name="backend_url">https://qa.nhancenow.com</string>--><!-- Digital Ocean QA Server Public IP HTTPS-->
     <!--<string name="backend_url">http://192.168.0.96:8080</string>-->
     <!--<string name="backend_url">https://app.nhancenow.com</string>--><!--Prod Server HTTPS-->
+    <string name="backend_url">http://139.59.12.52:4100</string>  <!--Dev Server Public-->
     <string name="source_type">android</string>
     <string name="prompt_mobile">Mobile No</string>
     <string name="prompt_password">Password</string>
@@ -132,4 +133,7 @@
     <string name="password_changed_successfully">Password changed.</string>
     <string name="mobile_number_blank_error">Seems you forgot to enter Mobile Number</string>
     <string name="please_enter_password">Seems you forgot to enter the Password</string>
+
+    <string name="user_logout_message">Logged out because you logged in from another device.</string>
+
 </resources>

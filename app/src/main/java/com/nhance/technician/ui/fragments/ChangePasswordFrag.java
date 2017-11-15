@@ -25,14 +25,18 @@ import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
 import com.nhance.technician.model.MasterDataDTO;
-import com.nhance.technician.model.SellerLoginDTO;
 import com.nhance.technician.model.ServiceRequestInvoiceDTO;
+import com.nhance.technician.model.newapis.ChangePasswordModel;
+import com.nhance.technician.model.newapis.ChangePasswordModelResponse;
+import com.nhance.technician.model.newapis.ErrorMessage;
+import com.nhance.technician.model.newapis.ResponseStatus;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.AlertCode;
 import com.nhance.technician.ui.BaseFragmentActivity;
 import com.nhance.technician.ui.TechOperationsActivity;
+import com.nhance.technician.ui.action.CommonAction;
 
 import java.io.IOException;
 import java.util.List;
@@ -75,11 +79,11 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
         /*getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {*/
-                if(show){
-                    ((BaseFragmentActivity)getActivity()).showProgressDialog(getActivity(), "");
-                }else{
-                    ((BaseFragmentActivity)getActivity()).dismissProgressDialog();
-                }
+        if(show){
+            ((BaseFragmentActivity)getActivity()).showProgressDialog(getActivity(), "");
+        }else{
+            ((BaseFragmentActivity)getActivity()).dismissProgressDialog();
+        }
             /*}
         });*/
     }
@@ -134,8 +138,6 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
         });
 
     }
-
-    private SellerLoginDTO sellerLoginDTO = null;
 
     private void syncAndFetchStoredInvoices(String userCode) {
         showProgress(true);
@@ -237,10 +239,7 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
                 @Override
                 public void onFailure(Call call, IOException e) {
                     showProgress(false);
-                    sellerLoginDTO = null;
-                    sellerLoginDTO = new SellerLoginDTO();
-                    sellerLoginDTO.setResponseStatus(1);
-                    sellerLoginDTO.setMessageDescription("Unable to process your request. Please try again.");
+                    ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
                 }
 
                 @Override
@@ -248,29 +247,25 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
                     showProgress(false);
                     if (response.isSuccessful()) {
                         int responseCode = response.code();
-                            /*Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
-                            startActivity(mainIntent);
-                            finish();*/
                         if (responseCode == 200) {
                             try {
+                                int status = 0;
+
                                 String resStr = response.body().string();
                                 LOG.d("UserLoginTask", resStr);
-                                sellerLoginDTO = JSONAdaptor.fromJSON(resStr, SellerLoginDTO.class);
 
-                                if (sellerLoginDTO != null) {
-                                    int status = 0;
-                                    if (sellerLoginDTO.getResponseStatus() != null) {
-                                        status = sellerLoginDTO.getResponseStatus();
+                                ChangePasswordModelResponse changePasswordModelResponse = JSONAdaptor.fromJSON(resStr, ChangePasswordModelResponse.class);
+                                ResponseStatus responseStatus = changePasswordModelResponse.getStatus();
+                                if (responseStatus != null && responseStatus.getStatusCode() != null) {
+                                    status = responseStatus.getStatusCode();
+                                }
+                                if (status > 0) {
+                                    List<ErrorMessage> errorMessages = responseStatus.getErrorMessages();
+                                    if (errorMessages != null && errorMessages.size() > 0) {
+                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMessages.get(0).getMessageDescription());
                                     }
-                                    if (status > 0) {
-                                        String errorMsg = sellerLoginDTO.getMessageDescription();
-                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
-                                    } else {
-                                        LOG.d("", sellerLoginDTO.toString());
-                                        ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.password_changed_successfully), getResources().getString(R.string.ok), null, AlertCode.CHANGE_PASSWORD_SUCCESS);
-                                    }
-                                } else {
-                                    ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.unable_to_process));
+                                }else{
+                                    ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.password_changed_successfully), getResources().getString(R.string.ok), null, AlertCode.CHANGE_PASSWORD_SUCCESS);
                                 }
                             } catch (IOException ioe) {
                                 ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time.");
@@ -297,15 +292,18 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
             String oldPassword = input_current_password.getText().toString().trim();
             String newPassword = newPswdeET.getText().toString().trim();
 
-            sellerLoginDTO = new SellerLoginDTO();
-            sellerLoginDTO.setOldPassword(oldPassword);
-            sellerLoginDTO.setPassword(newPassword);
-            sellerLoginDTO.setMobileNumber(Application.getInstance().getMobileNumber());
-            sellerLoginDTO.setIsdCode("91");
-            sellerLoginDTO.setDefaultLocale("en_US");
-            sellerLoginDTO.setAppType(Application.getInstance().getApplicationType());
-            LOG.d("Request===> ", sellerLoginDTO.toString());
-            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.CHANGE_PASSWORD_URL, JSONAdaptor.toJSON(sellerLoginDTO), call);
+            ChangePasswordModel login = new ChangePasswordModel();
+            login.setOldPassword(oldPassword);
+            login.setNewPassword(newPassword);
+
+            new CommonAction().addCommonRequestParameters(login);
+
+            login = (ChangePasswordModel)NhanceApplication.getModelToTakeActions();
+
+            NhanceApplication.setModelToTakeAction(login);
+
+            LOG.d("Request===> ", login.toString());
+            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.CHANGE_PASSWORD_URL, JSONAdaptor.toJSON(login), call);
         } catch (IOException e) {
             e.printStackTrace();
             ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
@@ -399,7 +397,7 @@ public class ChangePasswordFrag extends Fragment implements ApplicationConstants
     private void moveToDashboard(){
 
         Intent mainIntent = new Intent(getActivity(), TechOperationsActivity.class);
-        mainIntent.putExtra("USERCODE", sellerLoginDTO.getUserCode());
+        mainIntent.putExtra("USERCODE", Application.getInstance().getUserProfileUserIdOrGuid());
         getActivity().startActivity(mainIntent);
         getActivity().finish();
     }

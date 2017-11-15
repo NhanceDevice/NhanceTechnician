@@ -19,6 +19,9 @@ import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.model.Application;
 import com.nhance.technician.model.SellerLoginDTO;
+import com.nhance.technician.model.newapis.ChangePasswordModel;
+import com.nhance.technician.model.newapis.UserAuthModel;
+import com.nhance.technician.model.newapis.UserModel;
 
 
 /*
@@ -43,9 +46,12 @@ public class UserProfileTable {
     public static String COLUMN_MOBILE_NO = "mobile_no";
     public static String COLUMN_USER_NAME = "user_name";
 
+    public static String COLUMN_USER_ID_OR_GUID = "user_id";
+
     private static final String UserProfileTable_Create_Table = "CREATE TABLE IF NOT EXISTS " + USER_PROFILE_TABLE
             + " ("
             + COLUMN_ID + " INTEGER PRIMARY KEY AUTOINCREMENT,"
+            + COLUMN_USER_ID_OR_GUID        + " TEXT, "
             + COLUMN_USER_CODE + " TEXT ,"
             + COLUMN_SELLER_CODE + " TEXT ,"
             + COLUMN_SELLER_NAME + " TEXT ,"
@@ -142,6 +148,164 @@ public class UserProfileTable {
             if (null != cursor) cursor.close();
             cursor = null;
             NhanceApplication.applicationDataBase.endTransaction();
+        }
+    }
+
+    /**
+     * Method stores User details to DB
+     *
+     * @throws NhanceException
+     */
+    public void storeUserDetailsAfterSignIn() throws NhanceException {
+        try {
+            UserAuthModel userAuthModel = (UserAuthModel)NhanceApplication.getModelToTakeActions();
+            String loginPrincipal = userAuthModel.getLoginPrincipal();
+
+            Application application = Application.getInstance();
+
+            ContentValues userValues = new ContentValues();
+
+            if (application.getIsdCode() > 0)
+                userValues.put(UserProfileTable.COLUMN_ISD_CODE, application.getIsdCode());
+
+            if (loginPrincipal != null && !loginPrincipal.contains("@")) {
+                userValues.put(UserProfileTable.COLUMN_MOBILE_NO, loginPrincipal);
+                application.setMobileNumber(loginPrincipal);
+            }else if(application.getMobileNumber() != null){
+                userValues.put(UserProfileTable.COLUMN_MOBILE_NO, application.getMobileNumber());
+            }
+
+            if (loginPrincipal != null && loginPrincipal.contains("@")) {
+                userValues.put(UserProfileTable.COLUMN_SELLER_EMAIL_ID, loginPrincipal);
+                application.setEmailId(loginPrincipal);
+            }else if(application.getEmailId() != null){
+                userValues.put(UserProfileTable.COLUMN_SELLER_EMAIL_ID, application.getEmailId());
+            }
+
+            if(userAuthModel.getUserId() != null) {
+                userValues.put(UserProfileTable.COLUMN_USER_ID_OR_GUID, userAuthModel.getUserId());
+                application.setUserProfileUserIdOrGuid(userAuthModel.getUserId());
+            }
+
+            if(userAuthModel.getCustomerId()!= null) {
+                userValues.put(UserProfileTable.COLUMN_SELLER_CODE, userAuthModel.getCustomerId());
+                application.setSellerCode(userAuthModel.getCustomerId());
+            }
+
+            if(userAuthModel.getCustomerName()!= null) {
+                userValues.put(UserProfileTable.COLUMN_SELLER_NAME, userAuthModel.getCustomerName());
+                application.setSellerName(userAuthModel.getCustomerName());
+            }
+
+            if(userAuthModel.getFirstName() != null) {
+                userValues.put(UserProfileTable.COLUMN_USER_NAME, userAuthModel.getFirstName());
+                application.setLoggedInUserName(userAuthModel.getFirstName());
+            }
+
+            if ((application.getUserProfileUserIdOrGuid() != null && valueDetailsExistsInTable(UserProfileTable.USER_PROFILE_TABLE, UserProfileTable.COLUMN_USER_ID_OR_GUID, application.getUserProfileUserIdOrGuid()))) {
+                NhanceApplication.applicationDataBase.update(UserProfileTable.USER_PROFILE_TABLE, userValues, UserProfileTable.COLUMN_USER_ID_OR_GUID + " = ?",
+                        new String[]{application.getUserProfileUserIdOrGuid()});
+            } else {
+                NhanceApplication.applicationDataBase.insert(UserProfileTable.USER_PROFILE_TABLE, null, userValues);
+            }
+        } catch (Exception e) {
+            throw new NhanceException(NhanceException.DATABASE_SAVE_ERR);
+        }
+    }
+
+    /**
+     * Method to handle Reset Password response
+     *
+     * @param login
+     */
+    public void handleResetPasswordResponse(ChangePasswordModel login) throws NhanceException {
+
+        try {
+            if(login != null) {
+
+                Application application = Application.getInstance();
+
+                application.setUserProfileUserIdOrGuid(login.getUserId());
+                application.setCustomerId(login.getCustomerId());
+                application.setTenantId(login.getTenantId());
+                application.setLoggedInUserName(login.getFirstName());
+                application.setLoggedInUserProfilePicPath(login.getProfileImage());
+                application.setPassword(login.getNewPassword());
+
+                UserModel userModel = new UserModel();
+                userModel.setFirstName(login.getFirstName());
+
+                if (login.getLoginPrincipal() != null && login.getLoginPrincipal().contains("@")) {
+                    userModel.setEmail(login.getLoginPrincipal());
+                    application.setEmailId(userModel.getEmail());
+                } else {
+                    userModel.setMobile(login.getLoginPrincipal());
+                    application.setMobileNumber(userModel.getMobile());
+                }
+
+                storeUserDetails(userModel);
+
+                NhanceApplication.setModelToTakeAction(login);
+            }
+        }catch(Exception nhanceException){
+            throw new NhanceException(NhanceException.SERVER_EXCEPTION, nhanceException.getLocalizedMessage());
+        }
+    }
+
+    /**
+     * Method stores User details to DB
+     *
+     * @param customerProfile
+     * @throws NhanceException
+     */
+    public void storeUserDetails(UserModel customerProfile) throws NhanceException {
+
+        try {
+            ContentValues userValues = new ContentValues();
+
+            if (customerProfile.getFirstName() != null && customerProfile.getFirstName().length() > 0)
+                userValues.put(UserProfileTable.COLUMN_USER_NAME, customerProfile.getFirstName());
+
+            Application application = Application.getInstance();
+            if (customerProfile.getFirstName() != null && customerProfile.getFirstName().length() > 0)
+                application.setLoggedInUserName(customerProfile.getFirstName());
+
+            if (customerProfile.getMobile() != null && customerProfile.getMobile().length() > 0) {
+                userValues.put(UserProfileTable.COLUMN_MOBILE_NO, customerProfile.getMobile());
+                application.setMobileNumber(customerProfile.getMobile());
+            }
+            if (customerProfile.getIsdCode() != null && customerProfile.getIsdCode() > 0) {
+                userValues.put(UserProfileTable.COLUMN_ISD_CODE, customerProfile.getIsdCode());
+                application.setIsdCode(customerProfile.getIsdCode());
+            }
+            if (application.getIsdCode() > 0) {
+                userValues.put(UserProfileTable.COLUMN_ISD_CODE, application.getIsdCode());
+            }
+
+            if (customerProfile.getEmail() != null && customerProfile.getEmail().length() > 0) {
+                userValues.put(UserProfileTable.COLUMN_SELLER_EMAIL_ID, customerProfile.getEmail());
+                application.setEmailId(customerProfile.getEmail());
+            }
+            if(application.getUserProfileUserIdOrGuid() != null)
+                userValues.put(UserProfileTable.COLUMN_USER_ID_OR_GUID, application.getUserProfileUserIdOrGuid());
+
+            String userPhoneNo = Application.getInstance().getUserProfileUserIdOrGuid();
+            if(userPhoneNo == null || (userPhoneNo != null && userPhoneNo.length() == 0)){
+                userPhoneNo = customerProfile.getUserId();
+            }
+
+            if (userPhoneNo != null && valueDetailsExistsInTable(UserProfileTable.USER_PROFILE_TABLE, UserProfileTable.COLUMN_USER_ID_OR_GUID, userPhoneNo)) {
+                NhanceApplication.applicationDataBase.update(UserProfileTable.USER_PROFILE_TABLE, userValues, UserProfileTable.COLUMN_USER_ID_OR_GUID + " = ?",
+                        new String[]{userPhoneNo});
+            } else {
+                NhanceApplication.applicationDataBase.insert(UserProfileTable.USER_PROFILE_TABLE, null, userValues);
+            }
+
+            if (customerProfile.getMobile() != null)
+                NhanceApplication.getApplication().setAppUserFolderPath(customerProfile.getMobile());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new NhanceException(NhanceException.DATABASE_SAVE_ERR);
         }
     }
 

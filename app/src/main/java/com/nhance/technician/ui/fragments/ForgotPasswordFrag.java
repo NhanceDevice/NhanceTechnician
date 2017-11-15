@@ -20,14 +20,19 @@ import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
-import com.nhance.technician.model.SellerLoginDTO;
+import com.nhance.technician.model.newapis.ChangePasswordModel;
+import com.nhance.technician.model.newapis.ErrorMessage;
+import com.nhance.technician.model.newapis.ResponseStatus;
+import com.nhance.technician.model.newapis.UserAuthResponse;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.BaseFragmentActivity;
+import com.nhance.technician.ui.action.CommonAction;
 import com.nhance.technician.ui.util.EditTextUtils;
 
 import java.io.IOException;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -184,8 +189,6 @@ public class ForgotPasswordFrag extends Fragment {
         }
     }
 
-    private SellerLoginDTO sellerLoginDTO = null;
-
     private void attemptToRequestOtp() {
 
         // Show a progress spinner, and kick off a background task to
@@ -199,10 +202,7 @@ public class ForgotPasswordFrag extends Fragment {
                 @Override
                 public void onFailure(Call call, IOException e) {
                     showProgress(false);
-                    sellerLoginDTO = null;
-                    sellerLoginDTO = new SellerLoginDTO();
-                    sellerLoginDTO.setResponseStatus(1);
-                    sellerLoginDTO.setMessageDescription("Unable to process your request. Please try again.");
+                    ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
                 }
 
                 @Override
@@ -210,39 +210,34 @@ public class ForgotPasswordFrag extends Fragment {
                     showProgress(false);
                     if (response.isSuccessful()) {
                         int responseCode = response.code();
-                            /*Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
-                            startActivity(mainIntent);
-                            finish();*/
-                        if (responseCode == 200) {
+                        if (responseCode == 200 || responseCode == 201) {
                             try {
                                 String resStr = response.body().string();
                                 LOG.d("UserLoginTask", resStr);
-                                sellerLoginDTO = JSONAdaptor.fromJSON(resStr, SellerLoginDTO.class);
+                                int status = 0;
 
-                                if (sellerLoginDTO != null) {
-                                    int status = 0;
-                                    if (sellerLoginDTO.getResponseStatus() != null) {
-                                        status = sellerLoginDTO.getResponseStatus();
+                                UserAuthResponse userAuthResponse = JSONAdaptor.fromJSON(resStr, UserAuthResponse.class);
+                                ResponseStatus responseStatus = userAuthResponse.getStatus();
+                                if (responseStatus != null && responseStatus.getStatusCode() != null) {
+                                    status = responseStatus.getStatusCode();
+                                }
+                                if (status > 0) {
+                                    List<ErrorMessage> errorMessages = responseStatus.getErrorMessages();
+                                    if (errorMessages != null && errorMessages.size() > 0) {
+                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMessages.get(0).getMessageDescription());
                                     }
-                                    if (status > 0) {
-                                        String errorMsg = sellerLoginDTO.getMessageDescription();
-                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
-                                    } else {
-                                        LOG.d("", sellerLoginDTO.toString());
-                                        try {
-                                            Application.getInstance().setMobileNumber(sellerLoginDTO.getMobileNumber());
-                                            getActivity().getSupportFragmentManager()
-                                                    .beginTransaction()
-                                                    .replace(R.id.login_container, new ValidateOTPFragment())
-                                                    .commit();
+                                }else{
+                                    try {
+//                                        Application.getInstance().setMobileNumber(Application.getInstance().getUserProfileUserIdOrGuid());
+                                        getActivity().getSupportFragmentManager()
+                                                .beginTransaction()
+                                                .replace(R.id.login_container, new ValidateOTPFragment())
+                                                .commit();
 
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                            ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
-                                        }
+                                    } catch (Exception e) {
+                                        e.printStackTrace();
+                                        ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
                                     }
-                                } else {
-                                    ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.unable_to_process));
                                 }
                             } catch (IOException ioe) {
                                 ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time.");
@@ -265,13 +260,35 @@ public class ForgotPasswordFrag extends Fragment {
                 }
 
             };
-            sellerLoginDTO = new SellerLoginDTO();
-            sellerLoginDTO.setMobileNumber(EditTextUtils.getText(inputEmailIdOrMobileNumber));
-            sellerLoginDTO.setIsdCode("91");
-            sellerLoginDTO.setDefaultLocale("en_US");
-            sellerLoginDTO.setAppType(Application.getInstance().getApplicationType());
-            LOG.d("Request===> ", sellerLoginDTO.toString());
-            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.OTP_REQUEST_URL, JSONAdaptor.toJSON(sellerLoginDTO), call);
+
+            ChangePasswordModel login = new ChangePasswordModel();
+
+            Application application = Application.getInstance();
+            application.setMobileNumber("");
+            application.setEmailId("");
+
+            if (!(EditTextUtils.getText(inputEmailIdOrMobileNumber).contains("@") || EditTextUtils.getText(inputEmailIdOrMobileNumber).contains("."))) {
+                String phoneNumber = EditTextUtils.getText(inputEmailIdOrMobileNumber);
+                application.setMobileNumber(phoneNumber);
+                login.setLoginPrincipal(phoneNumber);
+            } else {
+                String emailId = EditTextUtils.getText(inputEmailIdOrMobileNumber);
+                application.setEmailId(emailId);
+                login.setLoginPrincipal(emailId);
+            }
+
+            String isdCodeEditTextValue = "91";
+            login.setIsdCode(Integer.parseInt(isdCodeEditTextValue));
+            application.setIsdCode(Integer.parseInt(isdCodeEditTextValue));
+
+            new CommonAction().addCommonRequestParameters(login);
+            login = (ChangePasswordModel)NhanceApplication.getModelToTakeActions();
+
+            NhanceApplication.setModelToTakeAction(login);
+
+            LOG.d("Request===> ", login.toString());
+
+            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.OTP_REQUEST_URL, JSONAdaptor.toJSON(login), call);
         } catch (IOException e) {
             e.printStackTrace();
             ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");

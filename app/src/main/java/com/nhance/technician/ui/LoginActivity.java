@@ -14,6 +14,7 @@ import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.AppCompatImageButton;
 import android.support.v7.widget.AppCompatTextView;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -25,6 +26,8 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.GoogleApiAvailability;
 import com.nhance.technician.R;
 import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.NhanceApplication;
@@ -34,11 +37,15 @@ import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
 import com.nhance.technician.model.MasterDataDTO;
-import com.nhance.technician.model.SellerLoginDTO;
 import com.nhance.technician.model.ServiceRequestInvoiceDTO;
+import com.nhance.technician.model.newapis.ErrorMessage;
+import com.nhance.technician.model.newapis.ResponseStatus;
+import com.nhance.technician.model.newapis.UserAuthModel;
+import com.nhance.technician.model.newapis.UserAuthResponse;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
+import com.nhance.technician.service.fcm.RegistrationIntentService;
 import com.nhance.technician.ui.action.CommonAction;
 import com.nhance.technician.ui.util.KeyboardWatcher;
 import com.nhance.technician.util.AccessPreferences;
@@ -60,7 +67,7 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
     /**
      * Keep track of the login task to ensure we can cancel it if requested.
      */
-    private SellerLoginDTO sellerLoginDTO = null;
+    private UserAuthModel login;
     // UI references.
     private AutoCompleteTextView mMobileNoView;
     private AppCompatEditText mPasswordView;
@@ -83,6 +90,8 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                         PackageManager.PERMISSION_GRANTED) {
                     NhanceApplication.getApplication().createFileSystemToUse();
                     NhanceApplication.getApplication().initNhanceDb();
+
+                    doDeviceRegistration();
                 } else {
                     Toast.makeText(this, "No Permissions Granted !", Toast.LENGTH_SHORT).show();
                     finish();
@@ -124,7 +133,36 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
 
         if (!hasPermissions) {
             ActivityCompat.requestPermissions(this, permissions, RequestId);
+        }else
+            doDeviceRegistration();
+    }
+
+    private void doDeviceRegistration() {
+        boolean isTokenSentToServer = AccessPreferences.get(NhanceApplication.getContext(), ApplicationConstants.SENT_TOKEN_TO_SERVER, false);
+
+        if (!isTokenSentToServer) {
+            if (isPlayServicesInstalled()) {
+                Intent intent = new Intent(LoginActivity.this, RegistrationIntentService.class);
+                startService(intent);
+            }
         }
+    }
+
+    private static final int PLAY_SERVICES_RESOLUTION_REQUEST = 9000;
+
+    private boolean isPlayServicesInstalled() {
+        GoogleApiAvailability getGoogleapiAvailability = GoogleApiAvailability.getInstance();
+        int Code = getGoogleapiAvailability.isGooglePlayServicesAvailable(LoginActivity.this);
+        if (Code != ConnectionResult.SUCCESS) {
+            if (getGoogleapiAvailability.isUserResolvableError(Code)) {
+                getGoogleapiAvailability.getErrorDialog(LoginActivity.this, Code, PLAY_SERVICES_RESOLUTION_REQUEST).show();
+            } else {
+                Log.i("MainActivity", "This device is not supported.");
+                finish();
+            }
+            return false;
+        }
+        return true;
     }
 
     @Override
@@ -324,10 +362,7 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                     @Override
                     public void onFailure(Call call, IOException e) {
                         showProgress(false);
-                        sellerLoginDTO = null;
-                        sellerLoginDTO = new SellerLoginDTO();
-                        sellerLoginDTO.setResponseStatus(1);
-                        sellerLoginDTO.setMessageDescription("Unable to process your request. Please try again.");
+                        showAlert("Unable to process your request. Please try again.");
                     }
 
                     @Override
@@ -335,63 +370,64 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                         showProgress(false);
                         if (response.isSuccessful()) {
                             int responseCode = response.code();
-                            /*Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
-                            startActivity(mainIntent);
-                            finish();*/
                             if (responseCode == 200) {
                                 try {
                                     String resStr = response.body().string();
+                                    int status = 0;
                                     LOG.d("UserLoginTask", resStr);
-                                    sellerLoginDTO = JSONAdaptor.fromJSON(resStr, SellerLoginDTO.class);
 
-                                    if (sellerLoginDTO != null) {
-                                        int status = 0;
-                                        if (sellerLoginDTO.getResponseStatus() != null) {
-                                            status = sellerLoginDTO.getResponseStatus();
+                                    UserAuthResponse userAuthResponse = JSONAdaptor.fromJSON(resStr, UserAuthResponse.class);
+                                    ResponseStatus responseStatus = userAuthResponse.getStatus();
+                                    if (responseStatus != null && responseStatus.getStatusCode() != null) {
+                                        status = responseStatus.getStatusCode();
+                                    }
+                                    if (status > 0) {
+                                        List<ErrorMessage> errorMessages = responseStatus.getErrorMessages();
+                                        if (errorMessages != null && errorMessages.size() > 0) {
+                                            showAlert(errorMessages.get(0).getMessageDescription());
                                         }
-                                        if (status > 0) {
-                                            String errorMsg = sellerLoginDTO.getMessageDescription();
-                                            showAlert(errorMsg);
-                                        } else {
-                                            //Response ( SellerLoginDTO): success/failure + userCode +  sellerCode + sellerName + emailId + isdCode + mobileNumber + userName
-                                            LOG.d("", sellerLoginDTO.toString());
-                                            try {
+                                    }else{
+                                        try {
+                                            UserAuthModel userAuthModel = userAuthResponse.getMessage();
+                                            NhanceApplication.setModelToTakeAction(userAuthModel);
 
-                                                new UserProfileTable().storeUserDetails(sellerLoginDTO);
-                                                new CommonAction().loadBasicUserDeatilsToApplicationModel(sellerLoginDTO.getMobileNumber());
+                                            new UserProfileTable().storeUserDetailsAfterSignIn();
+                                            new CommonAction().loadBasicUserDeatilsToApplicationModel(userAuthModel.getUserId());
 
-                                                if(!sellerLoginDTO.isFirstLogin()) {
-                                                    AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.LOGGED_IN_USER, sellerLoginDTO.getMobileNumber());
-                                                    AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_LOGGED_IN);
-                                                }
-
-                                                if(sellerLoginDTO.isFirstLogin()){
-
-                                                    Intent intent = new Intent(LoginActivity.this, SetPasswordActivity.class);
-                                                    startActivity(intent);
-                                                    finish();
-                                                }
-                                                else {
-                                                    LOG.d("Application.getInstance() >>>>>>> ", Application.getInstance().toString());
-
-                                                    int availableServiceReqInvoices = GeneratedInvoiceTable.getCountOfServiceRequestInvoices(sellerLoginDTO.getUserCode());
-                                                    if (availableServiceReqInvoices > 0) {
-                                                        Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
-                                                        mainIntent.putExtra("USERCODE", sellerLoginDTO.getUserCode());
-                                                        startActivity(mainIntent);
-                                                        finish();
-                                                    } else {
-                                                        syncAndFetchStoredInvoices(sellerLoginDTO.getUserCode());
-                                                    }
-                                                }
-
-                                            } catch (NhanceException e) {
-                                                e.printStackTrace();
-                                                showAlert(e.getLocalizedMessage());
+                                            if(!userAuthModel.getFirstTimeLogin()) {
+                                                AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.LOGGED_IN_USER, userAuthModel.getUserId());
+                                                AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_LOGGED_IN);
                                             }
+
+                                            if(userAuthModel.getFirstTimeLogin()){
+
+                                                Intent intent = new Intent(LoginActivity.this, SetPasswordActivity.class);
+                                                startActivity(intent);
+                                                finish();
+                                            }
+                                            else {
+                                                //TODO:The below service is not ready to proceed.
+                                                Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
+                                                mainIntent.putExtra("USERCODE", userAuthModel.getUserId());
+                                                startActivity(mainIntent);
+                                                finish();
+                                                /*LOG.d("Application.getInstance() >>>>>>> ", Application.getInstance().toString());
+
+                                                int availableServiceReqInvoices = GeneratedInvoiceTable.getCountOfServiceRequestInvoices(userAuthModel.getUserId());
+                                                if (availableServiceReqInvoices > 0) {
+                                                    Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
+                                                    mainIntent.putExtra("USERCODE", userAuthModel.getUserId());
+                                                    startActivity(mainIntent);
+                                                    finish();
+                                                } else {
+                                                    syncAndFetchStoredInvoices(userAuthModel.getUserId());
+                                                }*/
+                                            }
+
+                                        } catch (NhanceException e) {
+                                            e.printStackTrace();
+                                            showAlert(e.getLocalizedMessage());
                                         }
-                                    } else {
-                                        showAlert(getResources().getString(R.string.unable_to_process));
                                     }
                                 } catch (IOException ioe) {
                                     showAlert("Server Unreachable. Please try after some time.");
@@ -414,21 +450,39 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                     }
 
                 };
-                sellerLoginDTO = new SellerLoginDTO();
-                sellerLoginDTO.setMobileNumber(mobileNo);
-                Application.getInstance().setMobileNumber(mobileNo);
-                sellerLoginDTO.setIsdCode("91");
-                Application.getInstance().setIsdCode(Integer.parseInt("91"));
-                sellerLoginDTO.setPassword(password);
-                sellerLoginDTO.setDefaultLocale("en_US");
-                sellerLoginDTO.setAppType(Application.getInstance().getApplicationType());
-                LOG.d("Request===> ", sellerLoginDTO.toString());
-                RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.LOGIN_REQ, JSONAdaptor.toJSON(sellerLoginDTO), call);
+
+                UserAuthModel login = new UserAuthModel();
+                Application application = Application.getInstance();
+
+                if (!(mobileNo.contains("@") || mobileNo.contains("."))) {
+                    application.setMobileNumber(mobileNo);
+                    login.setLoginPrincipal(mobileNo);
+                } else {
+                    application.setEmailId(mobileNo);
+                    login.setLoginPrincipal(mobileNo);
+                }
+
+                login.setPassword(password);
+                application.setPassword(login.getPassword());
+                String isdCodeEditTextValue = "91";
+                if (isdCodeEditTextValue != null && !isdCodeEditTextValue.isEmpty() && isdCodeEditTextValue.length() > 0) {
+                    login.setIsdCode(Integer.parseInt(isdCodeEditTextValue));
+                    application.setIsdCode(Integer.parseInt(isdCodeEditTextValue));
+                }
+
+                new CommonAction().addCommonRequestParameters(login);
+
+                login = (UserAuthModel)NhanceApplication.getModelToTakeActions();
+
+                LOG.d("Request===> ", login.toString());
+                RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.LOGIN_REQ, JSONAdaptor.toJSON(login), call);
             } catch (IOException e) {
                 e.printStackTrace();
+                dismissProgressDialog();
                 showAlert("Unable to process your request. Please try again.");
             } catch (NhanceException e) {
                 e.printStackTrace();
+                dismissProgressDialog();
                 showAlert("Unable to process your request. Please try again.");
             }
         }
@@ -476,7 +530,7 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                                             }
                                         }
                                         Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
-                                        mainIntent.putExtra("USERCODE", sellerLoginDTO.getUserCode());
+                                        mainIntent.putExtra("USERCODE", Application.getInstance().getUserProfileUserIdOrGuid());
                                         startActivity(mainIntent);
                                         finish();
                                     }

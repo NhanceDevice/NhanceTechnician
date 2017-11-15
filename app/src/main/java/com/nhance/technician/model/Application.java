@@ -29,11 +29,18 @@ public class Application {
 	private String mobileNumber;
 	private String loggedInUserName;
 	private String sellerCode;
+	private String sellerName;
 	private String password;
 	private int isdCode;
 	private String userCode;
 	private String os;
 	private String loggedInUserProfilePicPath;
+
+	private String userProfileUserIdOrGuid;
+	private String customerId;
+	private String tenantId;
+
+	private String emailId;
 
 	private Application()
 	{
@@ -46,6 +53,10 @@ public class Application {
 			applicationInstance = new Application();
 		}
 		return applicationInstance;
+	}
+
+	public void clearObject(){
+		applicationInstance = null;
 	}
 
 	public int getApplicationType() {
@@ -128,6 +139,38 @@ public class Application {
 		this.loggedInUserProfilePicPath = loggedInUserProfilePicPath;
 	}
 
+	public String getUserProfileUserIdOrGuid() {
+		return userProfileUserIdOrGuid;
+	}
+
+	public void setUserProfileUserIdOrGuid(String userProfileUserIdOrGuid) {
+		this.userProfileUserIdOrGuid = userProfileUserIdOrGuid;
+	}
+
+	public String getCustomerId() {
+		return customerId;
+	}
+
+	public void setCustomerId(String customerId) {
+		this.customerId = customerId;
+	}
+
+	public String getTenantId() {
+		return tenantId;
+	}
+
+	public void setTenantId(String tenantId) {
+		this.tenantId = tenantId;
+	}
+
+	public String getEmailId() {
+		return emailId;
+	}
+
+	public void setEmailId(String emailId) {
+		this.emailId = emailId;
+	}
+
 	@Override
 	public String toString() {
 		return "Application{" +
@@ -152,6 +195,14 @@ public class Application {
 
 	public void setSellerCode(String sellerCode) {
 		this.sellerCode = sellerCode;
+	}
+
+	public String getSellerName() {
+		return sellerName;
+	}
+
+	public void setSellerName(String sellerName) {
+		this.sellerName = sellerName;
 	}
 
 	public int getIsdCode() {

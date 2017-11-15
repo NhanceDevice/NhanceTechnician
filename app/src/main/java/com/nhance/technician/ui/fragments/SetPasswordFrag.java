@@ -26,13 +26,17 @@ import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
 import com.nhance.technician.model.MasterDataDTO;
-import com.nhance.technician.model.SellerLoginDTO;
 import com.nhance.technician.model.ServiceRequestInvoiceDTO;
+import com.nhance.technician.model.newapis.ChangePasswordModel;
+import com.nhance.technician.model.newapis.ChangePasswordModelResponse;
+import com.nhance.technician.model.newapis.ErrorMessage;
+import com.nhance.technician.model.newapis.ResponseStatus;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.BaseFragmentActivity;
 import com.nhance.technician.ui.TechOperationsActivity;
+import com.nhance.technician.ui.action.CommonAction;
 import com.nhance.technician.util.AccessPreferences;
 
 import java.io.IOException;
@@ -162,7 +166,7 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
 
     }
 
-    private SellerLoginDTO sellerLoginDTO = null;
+//    private SellerLoginDTO sellerLoginDTO = null;
 
     private void syncAndFetchStoredInvoices(String userCode) {
         showProgress(true);
@@ -264,10 +268,7 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
                 @Override
                 public void onFailure(Call call, IOException e) {
                     showProgress(false);
-                    sellerLoginDTO = null;
-                    sellerLoginDTO = new SellerLoginDTO();
-                    sellerLoginDTO.setResponseStatus(1);
-                    sellerLoginDTO.setMessageDescription("Unable to process your request. Please try again.");
+                    ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
                 }
 
                 @Override
@@ -275,49 +276,37 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
                     showProgress(false);
                     if (response.isSuccessful()) {
                         int responseCode = response.code();
-                            /*Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
-                            startActivity(mainIntent);
-                            finish();*/
                         if (responseCode == 200) {
                             try {
                                 String resStr = response.body().string();
+                                int status = 0;
                                 LOG.d("UserLoginTask", resStr);
-                                sellerLoginDTO = JSONAdaptor.fromJSON(resStr, SellerLoginDTO.class);
 
-                                if (sellerLoginDTO != null) {
-                                    int status = 0;
-                                    if (sellerLoginDTO.getResponseStatus() != null) {
-                                        status = sellerLoginDTO.getResponseStatus();
+                                ChangePasswordModelResponse changePasswordModelResponse = JSONAdaptor.fromJSON(resStr, ChangePasswordModelResponse.class);
+                                ResponseStatus responseStatus = changePasswordModelResponse.getStatus();
+                                if (responseStatus != null && responseStatus.getStatusCode() != null) {
+                                    status = responseStatus.getStatusCode();
+                                }
+                                if (status > 0) {
+                                    List<ErrorMessage> errorMessages = responseStatus.getErrorMessages();
+                                    if (errorMessages != null && errorMessages.size() > 0) {
+                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMessages.get(0).getMessageDescription());
                                     }
-                                    if (status > 0) {
-                                        String errorMsg = sellerLoginDTO.getMessageDescription();
-                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
-                                    } else {
-                                        //Response ( SellerLoginDTO): success/failure + userCode +  sellerCode + sellerName + emailId + isdCode + mobileNumber + userName
-                                        LOG.d("", sellerLoginDTO.toString());
-                                        if(sellerLoginDTO.getUserCode() == null || (sellerLoginDTO.getUserCode() != null && sellerLoginDTO.getUserCode().length() == 0))
-                                            sellerLoginDTO.setUserCode(Application.getInstance().getUserCode());
+                                }else{
+                                    ChangePasswordModel changePasswordModel = changePasswordModelResponse.getMessage();
+                                    if(changePasswordModel == null){
+                                        changePasswordModel = (ChangePasswordModel)NhanceApplication.getModelToTakeActions();
 
-                                        try {
+                                        AccessPreferences.put(getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_LOGGED_OUT);
+                                        NhanceApplication.setModelToTakeAction(changePasswordModel);
+                                        proceedAfterResetPassword(changePasswordModel);
 
-                                            if(!new UserProfileTable().isUserProfileDetailsExists(Application.getInstance().getMobileNumber())) {
-                                                new UserProfileTable().storeUserDetails(sellerLoginDTO);
-                                            }
-
-                                            int availableServiceReqInvoices = GeneratedInvoiceTable.getCountOfServiceRequestInvoices(sellerLoginDTO.getUserCode());
-                                            if (availableServiceReqInvoices > 0) {
-                                                moveToDashboard();
-                                            } else {
-                                                syncAndFetchStoredInvoices(sellerLoginDTO.getUserCode());
-                                            }
-
-                                        } catch (NhanceException e) {
-                                            e.printStackTrace();
-                                            ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
-                                        }
+                                    }else {
+                                        changePasswordModel.setLoginPrincipal(((ChangePasswordModel)NhanceApplication.getModelToTakeActions()).getLoginPrincipal());
+                                        changePasswordModel.setNewPassword(((ChangePasswordModel)NhanceApplication.getModelToTakeActions()).getNewPassword());
+                                        NhanceApplication.setModelToTakeAction(changePasswordModel);
+                                        proceedAfterResetPassword(changePasswordModel);
                                     }
-                                } else {
-                                    ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.unable_to_process));
                                 }
                             } catch (IOException ioe) {
                                 ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time.");
@@ -342,21 +331,49 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
             };
 
             String newPassword = newPswdeET.getText().toString().trim();
+            ChangePasswordModel login = new ChangePasswordModel();
 
-            sellerLoginDTO = new SellerLoginDTO();
-            sellerLoginDTO.setPassword(newPassword);
-            sellerLoginDTO.setMobileNumber(Application.getInstance().getMobileNumber());
-            sellerLoginDTO.setIsdCode("91");
-            sellerLoginDTO.setDefaultLocale("en_US");
-            sellerLoginDTO.setAppType(Application.getInstance().getApplicationType());
-            LOG.d("Request===> ", sellerLoginDTO.toString());
-            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.RESET_PASSWORD_REQ_URL, JSONAdaptor.toJSON(sellerLoginDTO), call);
+            if(Application.getInstance().getMobileNumber() != null && Application.getInstance().getMobileNumber().length() != 0)
+                login.setLoginPrincipal(Application.getInstance().getMobileNumber());
+            if(Application.getInstance().getEmailId() != null && Application.getInstance().getEmailId().length() != 0)
+                login.setLoginPrincipal(Application.getInstance().getEmailId());
+
+            login.setNewPassword(newPassword);
+            new CommonAction().addCommonRequestParameters(login);
+            login = (ChangePasswordModel)NhanceApplication.getModelToTakeActions();
+
+            NhanceApplication.setModelToTakeAction(login);
+
+            LOG.d("Request===> ", login.toString());
+            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.RESET_PASSWORD_REQ_URL, JSONAdaptor.toJSON(login), call);
         } catch (IOException e) {
             e.printStackTrace();
             ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
         } catch (NhanceException e) {
             e.printStackTrace();
             ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
+        }
+    }
+
+    private void proceedAfterResetPassword(ChangePasswordModel changePasswordModel){
+        try {
+
+            if(!new UserProfileTable().isUserProfileDetailsExists(Application.getInstance().getUserProfileUserIdOrGuid())) {
+                new UserProfileTable().handleResetPasswordResponse(changePasswordModel);
+            }
+
+            //TODO:The below service is not ready to proceed.
+            /*int availableServiceReqInvoices = GeneratedInvoiceTable.getCountOfServiceRequestInvoices(Application.getInstance().getUserProfileUserIdOrGuid());
+            if (availableServiceReqInvoices > 0) {
+                moveToDashboard();
+            } else {
+                syncAndFetchStoredInvoices(Application.getInstance().getUserProfileUserIdOrGuid());
+            }*/
+            moveToDashboard();
+
+        } catch (NhanceException e) {
+            e.printStackTrace();
+            ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
         }
     }
 
@@ -385,12 +402,7 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
 
                 ((BaseFragmentActivity) getActivity()).hideSoftKeyPad();
 
-                if(sellerLoginDTO == null)
-                    sellerLoginDTO = new SellerLoginDTO();
-
-                sellerLoginDTO.setUserCode(Application.getInstance().getUserCode());
-
-                syncAndFetchStoredInvoices(sellerLoginDTO.getUserCode());
+                syncAndFetchStoredInvoices(Application.getInstance().getUserProfileUserIdOrGuid());
             }
         });
 
@@ -467,16 +479,11 @@ public class SetPasswordFrag extends Fragment implements ApplicationConstants {
 
     private void moveToDashboard(){
 
-        String loggedInMobileNumber = sellerLoginDTO.getMobileNumber();
-        if(loggedInMobileNumber == null || (loggedInMobileNumber != null && loggedInMobileNumber.length() == 0)){
-            loggedInMobileNumber = Application.getInstance().getMobileNumber();
-        }
-
-        AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.LOGGED_IN_USER, loggedInMobileNumber);
+        AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.LOGGED_IN_USER, Application.getInstance().getUserProfileUserIdOrGuid());
         AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_LOGGED_IN);
 
         Intent mainIntent = new Intent(getActivity(), TechOperationsActivity.class);
-        mainIntent.putExtra("USERCODE", sellerLoginDTO == null ? Application.getInstance().getUserCode() : sellerLoginDTO.getUserCode() == null ? Application.getInstance().getUserCode() : sellerLoginDTO.getUserCode());
+        mainIntent.putExtra("USERCODE", Application.getInstance().getUserProfileUserIdOrGuid());
         getActivity().startActivity(mainIntent);
         getActivity().finish();
     }

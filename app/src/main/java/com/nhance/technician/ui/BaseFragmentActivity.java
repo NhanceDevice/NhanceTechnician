@@ -10,6 +10,8 @@
 package com.nhance.technician.ui;
 
 import android.app.Activity;
+import android.app.ActivityManager;
+import android.app.KeyguardManager;
 import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -37,14 +39,29 @@ import android.widget.TextView;
 import com.nhance.technician.R;
 import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.NhanceApplication;
+import com.nhance.technician.exception.NhanceException;
+import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
-import com.nhance.technician.service.fcm.RegistrationIntentService;
+import com.nhance.technician.model.newapis.ErrorMessage;
+import com.nhance.technician.model.newapis.ResponseStatus;
+import com.nhance.technician.model.newapis.UserAuthModel;
+import com.nhance.technician.model.newapis.UserAuthResponse;
+import com.nhance.technician.networking.RestCall;
+import com.nhance.technician.networking.json.JSONAdaptor;
+import com.nhance.technician.networking.util.RestConstants;
+import com.nhance.technician.ui.action.CommonAction;
 import com.nhance.technician.ui.fragments.NavigationDrawerFragment;
 import com.nhance.technician.util.AccessPreferences;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
 import java.util.Map;
+
+import okhttp3.Call;
+import okhttp3.Callback;
+import okhttp3.Response;
 
 //import com.applozic.mobicomkit.api.account.user.UserClientService;
 
@@ -160,7 +177,10 @@ public abstract class BaseFragmentActivity extends AppCompatActivity implements 
 
             public void onClick(DialogInterface dialog, int which) {
                 dialog.dismiss();
-                AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.SENT_TOKEN_TO_SERVER, false);
+
+                logoutWithDeRegisteringDevice(BaseFragmentActivity.this);
+                
+                /*AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.SENT_TOKEN_TO_SERVER, false);
                 new RegistrationIntentService().unregisterGCMToken();
                 AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_LOGGED_OUT);
                 Application.getInstance().setLoggedInUserName("");
@@ -168,7 +188,7 @@ public abstract class BaseFragmentActivity extends AppCompatActivity implements 
                 AccessPreferences.clear(BaseFragmentActivity.this);
                 Intent loginIntent = new Intent(BaseFragmentActivity.this, LoginActivity.class);
                 startActivity(loginIntent);
-                finish();
+                finish();*/
 
             }
         });
@@ -179,6 +199,163 @@ public abstract class BaseFragmentActivity extends AppCompatActivity implements 
             }
         });
         builder.show();
+    }
+
+    public void logoutWithDeRegisteringDevice(final Context context) {
+        try {
+
+            Callback call = new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    dismissProgressDialog();
+                    showAlert("Unable to process your request. Please try again.");
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) {
+                    dismissProgressDialog();
+                    if (response.isSuccessful()) {
+                        int responseCode = response.code();
+                        if (responseCode == 200) {
+                            try {
+                                int status = 0;
+
+                                String resStr = response.body().string();
+                                LOG.d("UserLoginTask", resStr);
+
+                                UserAuthResponse userAuthResponse = JSONAdaptor.fromJSON(resStr, UserAuthResponse.class);
+                                ResponseStatus responseStatus = userAuthResponse.getStatus();
+                                if (responseStatus != null && responseStatus.getStatusCode() != null) {
+                                    status = responseStatus.getStatusCode();
+                                }
+                                if (status > 0) {
+                                    List<ErrorMessage> errorMessages = responseStatus.getErrorMessages();
+                                    if (errorMessages != null && errorMessages.size() > 0) {
+                                        showAlert(errorMessages.get(0).getMessageDescription());
+                                    }
+                                }else{
+                                    UserAuthModel userAuthModel = userAuthResponse.getMessage();
+                                    if(userAuthModel == null)
+                                        userAuthModel = (UserAuthModel)NhanceApplication.getModelToTakeActions();
+
+                                    NhanceApplication.setModelToTakeAction(userAuthModel);
+
+                                    proceedToLogout(BaseFragmentActivity.this, false);
+                                }
+                            } catch (IOException ioe) {
+                                showAlert("Server Unreachable. Please try after some time.");
+                            } catch (NhanceException e) {
+                                showAlert("Server Unreachable. Please try after some time.");
+                            }
+                        } else if (responseCode == 404 || responseCode == 503) {
+                            LOG.d(TAG, "Server Unreachable. Please try after some time");
+                            showAlert("Server Unreachable. Please try after some time.");
+                        } else if (responseCode == 500) {
+                            LOG.d(TAG, "Internal server error.");
+                            showAlert("Error while communicating with server, please contact administrator.");
+                        } else {
+                            showAlert("Error while communicating with server, please contact administrator.");
+                        }
+
+                    } else {
+                        showAlert("Error while communicating with server, please contact administrator.");
+                    }
+                }
+
+            };
+
+            UserAuthModel login = new UserAuthModel();
+            login.setUserId(Application.getInstance().getUserProfileUserIdOrGuid());
+
+            new CommonAction().addCommonRequestParameters(login);
+
+            login = (UserAuthModel)NhanceApplication.getModelToTakeActions();
+
+            NhanceApplication.setModelToTakeAction(login);
+
+            LOG.d("Request===> ", login.toString());
+
+            String logoutUrl = NhanceApplication.getApplication().getBackendUrl() + RestConstants.LOGOUT_URL+"/"+login.getUserId();
+
+            RestCall.get(logoutUrl, call);
+        } catch (IOException e) {
+            e.printStackTrace();
+            showAlert("Unable to process your request. Please try again.");
+        } catch (NhanceException e) {
+            e.printStackTrace();
+            showAlert("Unable to process your request. Please try again.");
+        }
+    }
+
+    public void proceedToLogout(final Context context, boolean dueToLoginInDifferentDevice) {
+        AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.SENT_TOKEN_TO_SERVER, false);
+        AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.LOGGED_IN_USER, "");
+        AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_LOGGED_OUT);
+        Application.getInstance().setLoggedInUserName("");
+        Application.getInstance().setLoggedInUserProfilePicPath("");
+        Application.getInstance().setUserProfileUserIdOrGuid(null);
+        Application.getInstance().setEmailId(null);
+        Application.getInstance().setMobileNumber(null);
+        AccessPreferences.clear(context);
+        if (isAppOpened()) {
+            if (!dueToLoginInDifferentDevice) {
+                showLoginScreen(context);
+            } else {
+                final Activity currentActivity = getForegroundActivity();
+                showLoginScreen(context);
+                DialogInterface.OnClickListener clickListener = new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        switch (which){
+                            case DialogInterface.BUTTON_POSITIVE:
+                            {
+                                dialog.dismiss();
+                                break;
+                            }
+                            case DialogInterface.BUTTON_NEGATIVE:
+                            {
+                                dialog.dismiss();
+                                break;
+                            }
+                        }
+                    }
+                };
+                if (currentActivity != null) {
+                    showAlert(context.getResources().getString(R.string.user_logout_message), context.getResources().getString(R.string.ok), null, clickListener);
+                }
+            }
+        }
+    }
+
+    private void showLoginScreen(Context context){
+        AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_LOGGED_OUT);
+
+        Application application = Application.getInstance();
+        application.clearObject();
+
+        Intent intent = new Intent(BaseFragmentActivity.this, LoginActivity.class);
+        intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(intent);
+        finishAffinity();
+    }
+
+    public boolean isAppOpened() {
+        ActivityManager.RunningAppProcessInfo appProcessInfo = new ActivityManager.RunningAppProcessInfo();
+        ActivityManager.getMyMemoryState(appProcessInfo);
+        if (appProcessInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND || appProcessInfo.importance == ActivityManager.RunningAppProcessInfo.IMPORTANCE_VISIBLE) {
+            return true;
+        }
+
+        try {
+            final Activity currenctActivity = getForegroundActivity();
+            if (currenctActivity != null) {
+                KeyguardManager km = (KeyguardManager) currenctActivity.getSystemService(Context.KEYGUARD_SERVICE);
+                return km.inKeyguardRestrictedInputMode();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
     }
 
     @Override
@@ -358,6 +535,35 @@ public abstract class BaseFragmentActivity extends AppCompatActivity implements 
                 }
                 if(mPositiveButtonText != null && mPositiveButtonText.length() > 0){
                     dialog.setNegativeButton(mNegativeButtonText, BaseFragmentActivity.this);
+                }
+
+                final AlertDialog alert = dialog.create();
+                alert.show();
+            }
+        });
+    }
+
+    public void showAlert(final String messageToDisplay, final String positiveButtonText, final String negativeButtonText, final DialogInterface.OnClickListener listener){
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                mPositiveButtonText = positiveButtonText;
+                mNegativeButtonText = negativeButtonText;
+
+                if(mScreenTitle == null || (mScreenTitle != null && mScreenTitle.length() == 0))
+                    mScreenTitle = getResources().getString(R.string.alert);
+
+                AlertDialog.Builder dialog = new AlertDialog.Builder(BaseFragmentActivity.this);
+                dialog.setCancelable(false);
+                dialog.setTitle(mScreenTitle);
+                dialog.setMessage(messageToDisplay);
+
+                if(mPositiveButtonText != null && mPositiveButtonText.length() > 0){
+                    dialog.setPositiveButton(mPositiveButtonText, listener);
+                }
+                if(mPositiveButtonText != null && mPositiveButtonText.length() > 0){
+                    dialog.setNegativeButton(mNegativeButtonText, listener);
                 }
 
                 final AlertDialog alert = dialog.create();
