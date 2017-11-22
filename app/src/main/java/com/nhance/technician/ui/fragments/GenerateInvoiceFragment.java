@@ -125,9 +125,9 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
             }
         });
         serviceReqChargesHeaderACTV.setText(String.format(getResources().getString(R.string.instllation_charges), serviceRequestDTO.getServiceRequestSubject()));
-        discountAmountCurrencySymbolACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))));
-        additionalLabourChargeCurrencySymbolACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))));
-        taxAmountCurrencySymbolACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))));
+        discountAmountCurrencySymbolACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()));
+        additionalLabourChargeCurrencySymbolACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()));
+        taxAmountCurrencySymbolACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()));
         discountAmountACTV.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {
@@ -159,7 +159,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                 if (netPayableAmount < 0) {
                     netPayableAmount = 0;
                 }
-                netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
+                netPayableAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(netPayableAmount));
 
             }
         });
@@ -193,12 +193,12 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                     } else {
                         netPayableAmount = tempAmount;
                     }
-                    totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
+                    totalAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
 
                     if (netPayableAmount < 0) {
                         netPayableAmount = 0;
                     }
-                    netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
+                    netPayableAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(netPayableAmount));
                 } else {
                     cumulativeAmountPaidAgainstParts = cumulativeAmountPaidAgainstParts - additionalLabourCharge;
                     additionalLabourCharge = 0;
@@ -214,12 +214,12 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                     } else {
                         netPayableAmount = tempAmount;
                     }
-                    totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
+                    totalAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
 
                     if (netPayableAmount < 0) {
                         netPayableAmount = 0;
                     }
-                    netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
+                    netPayableAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(netPayableAmount));
                 }
             }
         });
@@ -244,7 +244,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                 customerMobNoACTV.setText(serviceRequestDTO.getMobileNumber());
             }
             if (serviceRequestDTO.getAmount() != null) {
-                installationChargesACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(serviceRequestDTO.getAmount()));
+                installationChargesACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(serviceRequestDTO.getAmount()));
                 cumulativeAmountPaidAgainstParts = serviceRequestDTO.getAmount();
                 double tempAmount = 0D;
                 if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
@@ -256,9 +256,9 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                 } else {
                     tempAmount = cumulativeAmountPaidAgainstParts;
                 }
-                totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
+                totalAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
                 netPayableAmount = tempAmount;
-                netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
+                netPayableAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(netPayableAmount));
             }
             if (serviceRequestDTO.getModeOfPayment() != null) {
                 if (serviceRequestDTO.getModeOfPayment() == MODE_OF_PAYMENT_CASH) {
@@ -316,7 +316,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                                     additionalLabourCharge = 0;
                                 }
                                 cumulativeAmountPaidAgainstParts = cumulativeAmountPaidAgainstParts + additionalLabourCharge;
-                                totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
+                                totalAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
                                 double tempAmount = cumulativeAmountPaidAgainstParts - discountAmount;
                                 if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
                                     int taxPercentage = serviceRequestDTO.getTaxPercentage();
@@ -329,7 +329,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                                 if (netPayableAmount < 0) {
                                     netPayableAmount = 0;
                                 }
-                                netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
+                                netPayableAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(netPayableAmount));
                                 break;
                             }
                         }
@@ -466,6 +466,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                     double totalAmount = oldServicePartDTO.getAmount()*quantity.intValue();
 
                     oldServicePartDTO.setCalculatedAmount(totalAmount);
+                    oldServicePartDTO.setAmount(totalAmount);
 
                     selectedPartsBasedOnTag.put(rowTag, oldServicePartDTO);
                     selectedPartsBasedOnPartName.put(oldServicePartDTO.getPartName(), oldServicePartDTO);
@@ -489,7 +490,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
         amountACTV.setKeyListener(null);
 
         final TextView currenctCodeTV = (TextView) view.findViewById(R.id.currencycode_tv);
-        currenctCodeTV.setText(new String(Character.toChars(Integer.parseInt(currencyCode, 16))));
+        currenctCodeTV.setText(Util.getCurrencySymbolFromUniCode(currencyCode));
 
         final ImageButton deleteButton = (ImageButton) view.findViewById(R.id.delete_button);
         deleteButton.setOnClickListener(new View.OnClickListener() {
@@ -555,7 +556,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
         cumulativeAmountPaidAgainstParts+=serviceRequestDTO.getAmount();
         cumulativeAmountPaidAgainstParts+=additionalLabourCharge;
 
-        totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
+        totalAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(cumulativeAmountPaidAgainstParts));
 
         double tempAmount = 0D;
         if (serviceRequestDTO.getTaxPercentage() != null && serviceRequestDTO.getTaxPercentage() > 0) {
@@ -568,7 +569,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
             tempAmount = cumulativeAmountPaidAgainstParts-discountAmount;
         }
         netPayableAmount = tempAmount;
-        netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
+        netPayableAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(netPayableAmount));
     }
 
     @Override

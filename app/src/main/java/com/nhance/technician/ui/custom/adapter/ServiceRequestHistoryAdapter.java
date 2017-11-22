@@ -43,7 +43,7 @@ public class ServiceRequestHistoryAdapter extends RecyclerView.Adapter<ServiceRe
 
             holder.invoiceNoTV.setText(serviceRequestInvoiceDTOList.get(position).getInvoiceNumber()!=null?serviceRequestInvoiceDTOList.get(position).getInvoiceNumber():"");
         if(serviceRequestInvoiceDTOList.get(position).getCurrencyCode()!=null && serviceRequestInvoiceDTOList.get(position).getCurrencyCode().length()>0) {
-            holder.amountTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestInvoiceDTOList.get(position).getCurrencyCode(), 16))) +
+            holder.amountTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestInvoiceDTOList.get(position).getCurrencyCode()) +
                     " " + Util.getFormattedAmount(serviceRequestInvoiceDTOList.get(position).getNetPaybleAmount()));
         }
         else{

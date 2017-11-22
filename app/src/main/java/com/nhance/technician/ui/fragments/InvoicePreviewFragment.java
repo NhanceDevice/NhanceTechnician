@@ -98,10 +98,10 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
         partsInstalledLL = (LinearLayout) mPartDetailsView.findViewById(R.id.part_installed_rg_ll);
         partsDetailsContainerLL = (LinearLayout) mPartDetailsView.findViewById(R.id.part_details_container_ll);
         serviceReqChargesHeaderACTV.setText(String.format(getResources().getString(R.string.instllation_charges),serviceRequestDTO.getServiceRequestSubject()));
-        discountAmountCurrencySymbolACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))));
-        additionalLabourChargeCurrencySymbolACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))));
+        discountAmountCurrencySymbolACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()));
+        additionalLabourChargeCurrencySymbolACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()));
         additionalLabourChargeACTV.setText(Util.getFormattedAmount(additionalLabourCharge));
-        taxAmountCurrencySymbolACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))));
+        taxAmountCurrencySymbolACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()));
         taxAmountACTV.setText(Util.getFormattedAmount(taxAmount));
         discountAmountACTV.setText(Util.getFormattedAmount(discountAmount));
         if (serviceRequestDTO != null) {
@@ -118,10 +118,10 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
                 customerMobNoACTV.setText(serviceRequestDTO.getMobileNumber());
             }
             if (serviceRequestDTO.getAmount() != null) {
-                installationChargesACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(serviceRequestDTO.getAmount()));
+                installationChargesACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(serviceRequestDTO.getAmount()));
             }
-            totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(totalAmount));
-            netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
+            totalAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(totalAmount));
+            netPayableAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(netPayableAmount));
 
             if(selectedModeOfPayment == MODE_OF_PAYMENT_CASH){
                 selectedModeOfPaymentTV.setText(CASH_PAYMENT);
@@ -159,7 +159,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
 
         partNameTV.setText(partDetails.getPartName());
         quantityTV.setText(String.valueOf(partDetails.getQuantity()));
-        amountTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount((partDetails.getCalculatedAmount())));
+        amountTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount((partDetails.getCalculatedAmount())));
 
         partsDetailsContainerLL.addView(inflatedView);
     }

@@ -7,6 +7,7 @@
     <string name="backend_url">https://qa.nhancenow.com</string><!-- Digital Ocean QA Server Public IP HTTPS-->
     <!--<string name="backend_url">http://192.168.0.96:8080</string>-->
     <!--<string name="backend_url">https://app.nhancenow.com</string>--><!--Prod Server HTTPS-->
+    <!--<string name="backend_url">https://demo.nhancenow.com</string>--><!--Demo Server HTTPS-->
     <string name="source_type">android</string>
     <string name="prompt_mobile">Mobile No</string>
     <string name="prompt_password">Password</string>
