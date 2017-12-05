@@ -47,7 +47,9 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentTop="true"
                         android:layout_marginBottom="5dp"
-                        style="@style/largettextappearance"
+                        android:textSize="15sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/black"
                         android:paddingTop="5dp"
                         android:text=""
                         />
@@ -134,7 +136,7 @@
                                 android:paddingLeft="5dp"
                                 android:paddingRight="5dp"
                                 android:text=""
-                                android:textSize="22sp"/>
+                                android:textSize="15sp"/>
                         </LinearLayout>
                     </RelativeLayout>
                 </RelativeLayout>

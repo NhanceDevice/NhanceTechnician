@@ -24,14 +24,18 @@ import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.datasets.GeneratedInvoiceTable;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
-import com.nhance.technician.model.ServicePartDTO;
-import com.nhance.technician.model.ServiceRequestDTO;
-import com.nhance.technician.model.ServiceRequestInvoiceDTO;
+import com.nhance.technician.model.newapis.ErrorMessage;
+import com.nhance.technician.model.newapis.ResponseStatus;
+import com.nhance.technician.model.newapis.ServiceRequestInvoiceComponentModel;
+import com.nhance.technician.model.newapis.ServiceRequestInvoiceModel;
+import com.nhance.technician.model.newapis.ServiceRequestInvoiceModelResponse;
+import com.nhance.technician.model.newapis.ServiceRequestModel;
+import com.nhance.technician.model.newapis.enums.Status;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.BaseFragmentActivity;
-import com.nhance.technician.ui.TechOperationsActivity;
+import com.nhance.technician.ui.action.CommonAction;
 import com.nhance.technician.util.Util;
 
 import java.io.IOException;
@@ -49,7 +53,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
 
 
     public static final String TAG = InvoicePreviewFragment.class.getName();
-    private ServiceRequestInvoiceDTO serviceRequestInvoiceDTO;
+    private ServiceRequestInvoiceModel serviceRequestInvoiceDTO;
     private double totalAmount = 0D;
     private double discountAmount = 0D;
     private double netPayableAmount = 0D;
@@ -61,8 +65,8 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
     LinearLayout partsInstalledLL;
     private RadioGroup newPartsInstalledRG;
     LinearLayout partsDetailsContainerLL;
-    private List<ServicePartDTO> partDetails;
-    private ServiceRequestDTO serviceRequestDTO;
+    private List<ServiceRequestInvoiceComponentModel> partDetails;
+    private ServiceRequestModel serviceRequestDTO;
     private double additionalLabourCharge = 0D;
     private Double taxAmount = 0D;
     private Integer selectedModeOfPayment = MODE_OF_PAYMENT_ONLINE;
@@ -97,31 +101,39 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
         selectedModeOfPaymentTV = (AppCompatTextView) mPartDetailsView.findViewById(R.id.selected_mode_of_payment_tv);
         partsInstalledLL = (LinearLayout) mPartDetailsView.findViewById(R.id.part_installed_rg_ll);
         partsDetailsContainerLL = (LinearLayout) mPartDetailsView.findViewById(R.id.part_details_container_ll);
-        serviceReqChargesHeaderACTV.setText(String.format(getResources().getString(R.string.instllation_charges),serviceRequestDTO.getServiceRequestSubject()));
-        discountAmountCurrencySymbolACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))));
-        additionalLabourChargeCurrencySymbolACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))));
+        serviceReqChargesHeaderACTV.setText(String.format(getResources().getString(R.string.instllation_charges),serviceRequestDTO.getSubject()));
+        discountAmountCurrencySymbolACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()));
+        additionalLabourChargeCurrencySymbolACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()));
         additionalLabourChargeACTV.setText(Util.getFormattedAmount(additionalLabourCharge));
-        taxAmountCurrencySymbolACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))));
+        taxAmountCurrencySymbolACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()));
         taxAmountACTV.setText(Util.getFormattedAmount(taxAmount));
         discountAmountACTV.setText(Util.getFormattedAmount(discountAmount));
         if (serviceRequestDTO != null) {
             if (serviceRequestDTO.getTaxName() != null) {
                 taxNameACTV.setText(serviceRequestDTO.getTaxName());
             }
-            if (serviceRequestDTO.getServiceRequestNumber() != null) {
-                serviceReqNoACTV.setText(serviceRequestDTO.getServiceRequestNumber());
+            if (serviceRequestDTO.getSrn() != null) {
+                serviceReqNoACTV.setText(serviceRequestDTO.getSrn());
             }
-            if (serviceRequestDTO.getCustomerName() != null) {
-                customerNameACTV.setText(serviceRequestDTO.getCustomerName());
+            if (serviceRequestDTO.getUserName() != null) {
+                customerNameACTV.setText(serviceRequestDTO.getUserName());
             }
-            if (serviceRequestDTO.getMobileNumber() != null) {
-                customerMobNoACTV.setText(serviceRequestDTO.getMobileNumber());
+            if (serviceRequestDTO.getContact() != null && serviceRequestDTO.getContact().getMobile() != null) {
+
+                StringBuilder stringBuilder = new StringBuilder();
+
+                if(serviceRequestDTO.getContact().getIsdCode() != null)
+                    stringBuilder.append("+"+serviceRequestDTO.getContact().getIsdCode());
+
+                stringBuilder.append(serviceRequestDTO.getContact().getMobile());
+
+                customerMobNoACTV.setText(stringBuilder.toString());
             }
             if (serviceRequestDTO.getAmount() != null) {
-                installationChargesACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(serviceRequestDTO.getAmount()));
+                installationChargesACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(serviceRequestDTO.getAmount()));
             }
-            totalAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(totalAmount));
-            netPayableAmountACTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount(netPayableAmount));
+            totalAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(totalAmount));
+            netPayableAmountACTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount(netPayableAmount));
 
             if(selectedModeOfPayment == MODE_OF_PAYMENT_CASH){
                 selectedModeOfPaymentTV.setText(CASH_PAYMENT);
@@ -136,7 +148,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
             if (partDetails != null && partDetails.size() > 0) {
                 partsDetailsContainerLL.setVisibility(View.VISIBLE);
                 newPartsInstalledRG.check(R.id.parts_installed_yes_rb);
-                for (ServicePartDTO partDetail : partDetails) {
+                for (ServiceRequestInvoiceComponentModel partDetail : partDetails) {
                     inflatePartDetailsView(partDetail);
                 }
 
@@ -148,7 +160,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
         return rootView;
     }
 
-    private void inflatePartDetailsView(ServicePartDTO partDetails) {
+    private void inflatePartDetailsView(ServiceRequestInvoiceComponentModel partDetails) {
         if (partDetails == null) {
             return;
         }
@@ -159,7 +171,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
 
         partNameTV.setText(partDetails.getPartName());
         quantityTV.setText(String.valueOf(partDetails.getQuantity()));
-        amountTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestDTO.getCurrencyCode(), 16))) + " " + Util.getFormattedAmount((partDetails.getCalculatedAmount())));
+        amountTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestDTO.getCurrencyCode()) + " " + Util.getFormattedAmount((partDetails.getCalculatedAmount())));
 
         partsDetailsContainerLL.addView(inflatedView);
     }
@@ -191,10 +203,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
                 @Override
                 public void onFailure(Call call, IOException e) {
                     showProgress(false);
-                    serviceRequestDTO = null;
-                    serviceRequestDTO = new ServiceRequestDTO();
-                    serviceRequestDTO.setResponseStatus(1);
-                    serviceRequestDTO.setMessageDescription("Unable to process your request. Please try again.");
+                    ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
                 }
 
                 @Override
@@ -207,23 +216,31 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
                             try {
                                 String resStr = response.body().string();
                                 LOG.d("fetchServiceRequestDetails", resStr);
-                                serviceRequestInvoiceDTO = JSONAdaptor.fromJSON(resStr, ServiceRequestInvoiceDTO.class);
 
-                                if (serviceRequestInvoiceDTO != null) {
-                                    int status = 0;
-                                    if (serviceRequestInvoiceDTO.getResponseStatus() != null) {
-                                        status = serviceRequestInvoiceDTO.getResponseStatus();
+                                int status = 0;
+
+                                ServiceRequestInvoiceModelResponse serviceRequestInvoiceModelResponse = JSONAdaptor.fromJSON(resStr, ServiceRequestInvoiceModelResponse.class);
+                                ResponseStatus responseStatus = serviceRequestInvoiceModelResponse.getStatus();
+                                if (responseStatus != null && responseStatus.getStatusCode() != null) {
+                                    status = responseStatus.getStatusCode();
+                                }
+                                if (status > 0) {
+                                    List<ErrorMessage> errorMessages = responseStatus.getErrorMessages();
+                                    if (errorMessages != null && errorMessages.size() > 0) {
+                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMessages.get(0).getMessageDescription());
                                     }
-                                    if (status > 0) {
-                                        String errorMsg = serviceRequestInvoiceDTO.getMessageDescription();
-                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
-                                    } else {
-                                        LOG.d("", serviceRequestInvoiceDTO.toString());
-                                        new GeneratedInvoiceTable().storeServiceReqInvoiceDetails(serviceRequestDTO, serviceRequestInvoiceDTO,selectedModeOfPayment);
-                                        showInvoiceGeneratedDialog(serviceRequestInvoiceDTO);
-                                    }
-                                } else {
-                                    ((BaseFragmentActivity)getActivity()).showAlert( getResources().getString(R.string.unable_to_process));
+                                }else{
+                                    ServiceRequestInvoiceModel serviceRequestInvoiceModel = serviceRequestInvoiceModelResponse.getMessage();
+                                    serviceRequestInvoiceDTO.setInvoiceNumber(serviceRequestInvoiceModel.getInvoiceNumber());
+                                    serviceRequestInvoiceDTO.setDocument(serviceRequestInvoiceModel.getDocument());
+                                    serviceRequestInvoiceDTO.setInvoiceStatus(serviceRequestInvoiceModel.getInvoiceStatus());
+                                    serviceRequestInvoiceDTO.setPaymentMode(selectedModeOfPayment);
+
+                                    new GeneratedInvoiceTable().storeServiceReqInvoiceDetails(serviceRequestInvoiceDTO);
+
+                                    new CommonAction().updateAssignedSRStatus(serviceRequestDTO.getGuid(), Status.COMPLETED.getCode());
+
+                                    showInvoiceGeneratedDialog();
                                 }
                             } catch (IOException ioe) {
                                 ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
@@ -247,20 +264,25 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
                 }
 
             };
-            serviceRequestInvoiceDTO = new ServiceRequestInvoiceDTO();
-            serviceRequestInvoiceDTO.setUserCode(((TechOperationsActivity) getActivity()).getUserCode());
-            serviceRequestInvoiceDTO.setServiceRequestNumber(serviceRequestDTO.getServiceRequestNumber());
-            serviceRequestInvoiceDTO.setServiceRequestSubject(serviceRequestDTO.getServiceRequestSubject());
+            serviceRequestInvoiceDTO = new ServiceRequestInvoiceModel();
+
+            serviceRequestInvoiceDTO.setCreatedDate(serviceRequestDTO.getCreatedDate());
+
+            serviceRequestInvoiceDTO.setSubject(serviceRequestDTO.getSubject());
+            serviceRequestInvoiceDTO.setUserName(serviceRequestDTO.getUserName());
+            serviceRequestInvoiceDTO.setCurrencyCode(serviceRequestDTO.getCurrencyCode());
+            serviceRequestInvoiceDTO.setUserId(serviceRequestDTO.getUserId());
+            serviceRequestInvoiceDTO.setSrn(serviceRequestDTO.getSrn());
+            serviceRequestInvoiceDTO.setServiceRequestGuid(serviceRequestDTO.getGuid());
             serviceRequestInvoiceDTO.setBaseAmount(serviceRequestDTO.getAmount());
             serviceRequestInvoiceDTO.setTotalAmount(totalAmount);
-            serviceRequestInvoiceDTO.setDiscount(discountAmount);
-            serviceRequestInvoiceDTO.setNetPaybleAmount(netPayableAmount);
-            serviceRequestInvoiceDTO.setAdditionLabourCharge(additionalLabourCharge);
             serviceRequestInvoiceDTO.setTaxAmount(taxAmount);
-            serviceRequestInvoiceDTO.setParts(partDetails);
-            serviceRequestInvoiceDTO.setModeOfPayment(selectedModeOfPayment);
+            serviceRequestInvoiceDTO.setDiscount(discountAmount);
+            serviceRequestInvoiceDTO.setNetPayableAmount(netPayableAmount);
+            serviceRequestInvoiceDTO.setServiceRequestInvoiceComponents(partDetails);
+            serviceRequestInvoiceDTO.setLabourAmount(additionalLabourCharge);
+            serviceRequestInvoiceDTO.setPaymentMode(selectedModeOfPayment);
             serviceRequestInvoiceDTO.setDefaultLocale("en_US");
-            LOG.d("Request===> ", serviceRequestInvoiceDTO.toString());
             RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.UPLOAD_INVOICE, JSONAdaptor.toJSON(serviceRequestInvoiceDTO), call);
         } catch (IOException e) {
             e.printStackTrace();
@@ -269,7 +291,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
         }
     }
 
-    private void showInvoiceGeneratedDialog(ServiceRequestInvoiceDTO serviceRequestInvoiceDTO) {
+    private void showInvoiceGeneratedDialog() {
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -316,8 +338,8 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
         });*/
     }
 
-    public void setServiceRequestDTO(ServiceRequestDTO serviceRequestDTO) {
-        this.serviceRequestDTO = serviceRequestDTO;
+    public void setServiceRequestDTO(ServiceRequestModel serviceRequestModel) {
+        this.serviceRequestDTO = serviceRequestModel;
     }
 
     public void setAmounts(double totalAmount, double discountAmount, double netPayableAmount, double additionalLabourCharge, double taxAmount) {
@@ -328,7 +350,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
         this.taxAmount = taxAmount;
     }
 
-    public void setPartDetails(List<ServicePartDTO> partDetails) {
+    public void setPartDetails(List<ServiceRequestInvoiceComponentModel> partDetails) {
         this.partDetails = partDetails;
     }
 

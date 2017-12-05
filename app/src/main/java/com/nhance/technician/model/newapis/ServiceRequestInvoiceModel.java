@@ -53,17 +53,17 @@ public class ServiceRequestInvoiceModel extends MessageModel {
 	/** The invoice status. */
 	private Integer invoiceStatus;
 
-	/** The invoice link. */
-	private String invoiceLink;
-	
-	/** The document name. */
-	private String documentName;
-	
 	/** The payment date. */
 	private Date paymentDate;
 	
 	/** The payment reference. */
 	private String paymentReference;
+	
+	/** The txn reference number. */
+	private String txnReferenceNumber;
+	
+	/** The txn response msg. */
+	private String txnResponseMsg;
 	
 	/** The service request guid. */
 	private String serviceRequestGuid;
@@ -71,8 +71,31 @@ public class ServiceRequestInvoiceModel extends MessageModel {
 	/** The digital kit guid. */
 	private String digitalKitGuid;
 	
+	/** The srn. */
+	private String srn;
+	
+	/** The digital kit code. */
+	private String digitalKitCode;
+	
+	/** The product name. */
+	private String productName;
+	
+	/** The currency code. */
+	private String currencyCode;
+	
+	/** The document. */
+	private DocumentModel document;
+
+	private Double srnAmount;
+	
 	/** The service request invoice components. */
 	private List<ServiceRequestInvoiceComponentModel> serviceRequestInvoiceComponents;
+
+	private AddressModel address;
+
+	private String taxName;
+
+	private Double taxPercentage;
 
 	/**
 	 * Gets the invoice number.
@@ -255,42 +278,6 @@ public class ServiceRequestInvoiceModel extends MessageModel {
 	}
 
 	/**
-	 * Gets the invoice link.
-	 *
-	 * @return the invoice link
-	 */
-	public String getInvoiceLink() {
-		return invoiceLink;
-	}
-
-	/**
-	 * Sets the invoice link.
-	 *
-	 * @param invoiceLink the new invoice link
-	 */
-	public void setInvoiceLink(String invoiceLink) {
-		this.invoiceLink = invoiceLink;
-	}
-
-	/**
-	 * Gets the document name.
-	 *
-	 * @return the document name
-	 */
-	public String getDocumentName() {
-		return documentName;
-	}
-
-	/**
-	 * Sets the document name.
-	 *
-	 * @param documentName the new document name
-	 */
-	public void setDocumentName(String documentName) {
-		this.documentName = documentName;
-	}
-
-	/**
 	 * Gets the payment date.
 	 *
 	 * @return the payment date
@@ -326,6 +313,42 @@ public class ServiceRequestInvoiceModel extends MessageModel {
 		this.paymentReference = paymentReference;
 	}
 
+
+	/**
+	 * Gets the txn reference number.
+	 *
+	 * @return the txn reference number
+	 */
+	public String getTxnReferenceNumber() {
+		return txnReferenceNumber;
+	}
+
+	/**
+	 * Sets the txn reference number.
+	 *
+	 * @param txnReferenceNumber the new txn reference number
+	 */
+	public void setTxnReferenceNumber(String txnReferenceNumber) {
+		this.txnReferenceNumber = txnReferenceNumber;
+	}
+
+	/**
+	 * Gets the txn response msg.
+	 *
+	 * @return the txn response msg
+	 */
+	public String getTxnResponseMsg() {
+		return txnResponseMsg;
+	}
+
+	/**
+	 * Sets the txn response msg.
+	 *
+	 * @param txnResponseMsg the new txn response msg
+	 */
+	public void setTxnResponseMsg(String txnResponseMsg) {
+		this.txnResponseMsg = txnResponseMsg;
+	}
 
 	/**
 	 * Gets the service request guid.
@@ -383,6 +406,128 @@ public class ServiceRequestInvoiceModel extends MessageModel {
 	}
 
 	/**
+	 * Gets the srn.
+	 *
+	 * @return the srn
+	 */
+	public String getSrn() {
+		return srn;
+	}
+
+	/**
+	 * Sets the srn.
+	 *
+	 * @param srn the new srn
+	 */
+	public void setSrn(String srn) {
+		this.srn = srn;
+	}
+
+	/**
+	 * Gets the digital kit code.
+	 *
+	 * @return the digital kit code
+	 */
+	public String getDigitalKitCode() {
+		return digitalKitCode;
+	}
+
+	/**
+	 * Sets the digital kit code.
+	 *
+	 * @param digitalKitCode the new digital kit code
+	 */
+	public void setDigitalKitCode(String digitalKitCode) {
+		this.digitalKitCode = digitalKitCode;
+	}
+
+	/**
+	 * Gets the product name.
+	 *
+	 * @return the product name
+	 */
+	public String getProductName() {
+		return productName;
+	}
+
+	/**
+	 * Sets the product name.
+	 *
+	 * @param productName the new product name
+	 */
+	public void setProductName(String productName) {
+		this.productName = productName;
+	}
+
+	/**
+	 * Gets the currency code.
+	 *
+	 * @return the currency code
+	 */
+	public String getCurrencyCode() {
+		return currencyCode;
+	}
+
+	/**
+	 * Sets the currency code.
+	 *
+	 * @param currencyCode the new currency code
+	 */
+	public void setCurrencyCode(String currencyCode) {
+		this.currencyCode = currencyCode;
+	}
+
+	/**
+	 * Gets the document.
+	 *
+	 * @return the document
+	 */
+	public DocumentModel getDocument() {
+		return document;
+	}
+
+	/**
+	 * Sets the document.
+	 *
+	 * @param document the new document
+	 */
+	public void setDocument(DocumentModel document) {
+		this.document = document;
+	}
+
+	public AddressModel getAddress() {
+		return address;
+	}
+
+	public void setAddress(AddressModel address) {
+		this.address = address;
+	}
+
+	public Double getSrnAmount() {
+		return srnAmount;
+	}
+
+	public void setSrnAmount(Double srnAmount) {
+		this.srnAmount = srnAmount;
+	}
+
+	public String getTaxName() {
+		return taxName;
+	}
+
+	public void setTaxName(String taxName) {
+		this.taxName = taxName;
+	}
+
+	public Double getTaxPercentage() {
+		return taxPercentage;
+	}
+
+	public void setTaxPercentage(Double taxPercentage) {
+		this.taxPercentage = taxPercentage;
+	}
+
+	/**
 	 * The Interface validateCreateServiceRequestInvoice.
 	 */
 	public interface validateCreateServiceRequestInvoice{}
@@ -396,5 +541,10 @@ public class ServiceRequestInvoiceModel extends MessageModel {
 	 * The Interface ValidateuploadInvoiceComponent.
 	 */
 	public interface ValidateuploadInvoiceComponent{}
+	
+	/**
+	 * The Interface ValidateFindByUser.
+	 */
+	public interface ValidateFindByUser{}
 	
 }

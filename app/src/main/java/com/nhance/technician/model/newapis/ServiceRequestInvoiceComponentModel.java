@@ -23,6 +23,16 @@ public class ServiceRequestInvoiceComponentModel extends MessageModel {
 	/** The invoice. */
 	private ServiceRequestInvoiceModel invoice;
 
+	public Double getCalculatedAmount() {
+		return calculatedAmount;
+	}
+
+	public void setCalculatedAmount(Double calculatedAmount) {
+		this.calculatedAmount = calculatedAmount;
+	}
+
+	private Double calculatedAmount;
+
 	/**
 	 * Gets the part id.
 	 *

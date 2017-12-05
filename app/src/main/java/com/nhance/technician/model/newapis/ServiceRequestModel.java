@@ -92,8 +92,72 @@ public class ServiceRequestModel extends MessageModel {
 	
 	/** The service request histories. */
 	private List<ServiceRequestHistoryModel> serviceRequestHistories;
-	
-	
+
+	private String currencyCode;
+
+	public List<AddressModel> getServiceLocations() {
+		return serviceLocations;
+	}
+
+	public void setServiceLocations(List<AddressModel> serviceLocations) {
+		this.serviceLocations = serviceLocations;
+	}
+
+	private List<AddressModel> serviceLocations;
+
+	private String taxName;
+
+	private Double taxPercentage;
+
+	/** The payment mode. */
+	private Integer modeOfPayment;
+
+	public Double getTaxAmount() {
+		return taxAmount;
+	}
+
+	public void setTaxAmount(Double taxAmount) {
+		this.taxAmount = taxAmount;
+	}
+
+	/** The tax amount. */
+	private Double taxAmount;
+
+	public List<ServiceRequestInvoiceComponentModel> getParts() {
+		return parts;
+	}
+
+	public void setParts(List<ServiceRequestInvoiceComponentModel> parts) {
+		this.parts = parts;
+	}
+
+	/** The service request invoice components. */
+	private List<ServiceRequestInvoiceComponentModel> parts;
+
+	public Integer getModeOfPayment() {
+		return modeOfPayment;
+	}
+
+	public void setModeOfPayment(Integer modeOfPayment) {
+		this.modeOfPayment = modeOfPayment;
+	}
+
+	public String getTaxName() {
+		return taxName;
+	}
+
+	public void setTaxName(String taxName) {
+		this.taxName = taxName;
+	}
+
+	public Double getTaxPercentage() {
+		return taxPercentage;
+	}
+
+	public void setTaxPercentage(Double taxPercentage) {
+		this.taxPercentage = taxPercentage;
+	}
+
 	/**
 	 * Gets the srn.
 	 *
@@ -507,6 +571,14 @@ public class ServiceRequestModel extends MessageModel {
 	 */
 	public void setServiceRequestHistories(List<ServiceRequestHistoryModel> serviceRequestHistories) {
 		this.serviceRequestHistories = serviceRequestHistories;
+	}
+
+	public String getCurrencyCode() {
+		return currencyCode;
+	}
+
+	public void setCurrencyCode(String currencyCode) {
+		this.currencyCode = currencyCode;
 	}
 
 	/**

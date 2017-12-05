@@ -55,6 +55,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
+import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.util.Vector;
 import java.util.concurrent.ExecutorService;
@@ -2327,5 +2328,20 @@ public class Util {
 
     public static float pxFromDp(float dp) {
         return dp * NhanceApplication.getContext().getResources().getDisplayMetrics().density;
+    }
+
+    public static String getCurrencySymbolFromUniCode(String unicodeValue) {
+        String currencySymbol = "";
+        if (unicodeValue != null) {
+            if (unicodeValue.contains(",")) {
+                StringTokenizer st = new StringTokenizer(unicodeValue.trim(),",");
+                while (st.hasMoreTokens()) {
+                    currencySymbol += new String(Character.toChars(Integer.parseInt(st.nextToken().trim(), 16)));
+                }
+            } else {
+                currencySymbol = new String(Character.toChars(Integer.parseInt(unicodeValue.trim(), 16)));
+            }
+        }
+        return currencySymbol;
     }
 }

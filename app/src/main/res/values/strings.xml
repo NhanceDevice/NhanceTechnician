@@ -5,9 +5,9 @@
 
     <!--<string name="backend_url">http://192.168.0.152:8080</string>--> <!-- Local Dev Server -->
     <!--<string name="backend_url">https://qa.nhancenow.com</string>--><!-- Digital Ocean QA Server Public IP HTTPS-->
-    <!--<string name="backend_url">http://192.168.0.96:8080</string>-->
+    <string name="backend_url">http://192.168.3.111:4100</string>  <!--Shuthanshu-->
     <!--<string name="backend_url">https://app.nhancenow.com</string>--><!--Prod Server HTTPS-->
-    <string name="backend_url">http://139.59.12.52:4100</string>  <!--Dev Server Public-->
+    <!--<string name="backend_url">http://139.59.12.52:4100</string>-->  <!--Dev Server Public-->
     <string name="source_type">android</string>
     <string name="prompt_mobile">Mobile No</string>
     <string name="prompt_password">Password</string>

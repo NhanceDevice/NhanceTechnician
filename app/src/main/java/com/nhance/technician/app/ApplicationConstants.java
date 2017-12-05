@@ -152,4 +152,10 @@ public interface ApplicationConstants {
     String REQUESTING_RESET_PASSWORD = "REQUESTING_RESET_PASSWORD";
 
     String CHANGE_PASSWORD_AFTER_OTP = "CHANGE PASSWORD AFTER OTP";
+
+    int SYNC_IN_PROGRESS = 1;
+    int SYNC_COMPLETED = 2;
+
+    int SYNC_ASSIGNED_SR = 1;
+    int SYNC_GENERATED_INVOICE = 2;
 }

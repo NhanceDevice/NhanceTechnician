@@ -17,6 +17,8 @@ import android.database.sqlite.SQLiteException;
 import android.util.Log;
 
 import com.nhance.technician.database.AppDatabaseUpgrade;
+import com.nhance.technician.datasets.AssignedServiceRequestTable;
+import com.nhance.technician.datasets.DataSyncTrackTable;
 import com.nhance.technician.datasets.GeneratedInvoiceTable;
 import com.nhance.technician.datasets.UserProfileTable;
 import com.nhance.technician.exception.NhanceException;
@@ -103,6 +105,8 @@ public class ApplicationDataBase {
         try {
             UserProfileTable.createTables(getDatabase());
             GeneratedInvoiceTable.createTables(getDatabase());
+            DataSyncTrackTable.createTables(getDatabase());
+            AssignedServiceRequestTable.createTables(getDatabase());
         } catch (SQLException e) {
             e.printStackTrace();
             throw new NhanceException(NhanceException.DATABASE_UPGRADE_STATEMENT_ERROR);

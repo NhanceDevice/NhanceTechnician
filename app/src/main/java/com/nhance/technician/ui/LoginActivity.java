@@ -36,10 +36,10 @@ import com.nhance.technician.datasets.UserProfileTable;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
-import com.nhance.technician.model.MasterDataDTO;
-import com.nhance.technician.model.ServiceRequestInvoiceDTO;
 import com.nhance.technician.model.newapis.ErrorMessage;
 import com.nhance.technician.model.newapis.ResponseStatus;
+import com.nhance.technician.model.newapis.ServiceRequestInvoiceModel;
+import com.nhance.technician.model.newapis.ServiceRequestInvoiceModelFindResponse;
 import com.nhance.technician.model.newapis.UserAuthModel;
 import com.nhance.technician.model.newapis.UserAuthResponse;
 import com.nhance.technician.networking.RestCall;
@@ -407,11 +407,11 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                                             }
                                             else {
                                                 //TODO:The below service is not ready to proceed.
-                                                Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
+                                                /*Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
                                                 mainIntent.putExtra("USERCODE", userAuthModel.getUserId());
                                                 startActivity(mainIntent);
-                                                finish();
-                                                /*LOG.d("Application.getInstance() >>>>>>> ", Application.getInstance().toString());
+                                                finish();*/
+                                                LOG.d("Application.getInstance() >>>>>>> ", Application.getInstance().toString());
 
                                                 int availableServiceReqInvoices = GeneratedInvoiceTable.getCountOfServiceRequestInvoices(userAuthModel.getUserId());
                                                 if (availableServiceReqInvoices > 0) {
@@ -421,7 +421,7 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                                                     finish();
                                                 } else {
                                                     syncAndFetchStoredInvoices(userAuthModel.getUserId());
-                                                }*/
+                                                }
                                             }
 
                                         } catch (NhanceException e) {
@@ -488,7 +488,7 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
         }
     }
 
-    private void syncAndFetchStoredInvoices(String userCode) {
+    private void syncAndFetchStoredInvoices(String user_guid) {
         showProgress(true);
         try {
 
@@ -508,34 +508,26 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                             try {
                                 String resStr = response.body().string();
                                 LOG.d("UserLoginTask", resStr);
-                                MasterDataDTO masterDataDTO = JSONAdaptor.fromJSON(resStr, MasterDataDTO.class);
 
-                                if (masterDataDTO != null) {
-                                    int status = 0;
-                                    if (masterDataDTO.getResponseStatus() != null) {
-                                        status = masterDataDTO.getResponseStatus();
-                                    }
-                                    if (status > 0) {
-                                        String errorMsg = masterDataDTO.getMessageDescription();
-                                        showAlert(errorMsg);
-                                    } else {
+                                int status = 0;
 
-                                        List<ServiceRequestInvoiceDTO> serviceRequestInvoiceDTOList = masterDataDTO.getInvoiceHistory();
-                                        if (serviceRequestInvoiceDTOList != null && serviceRequestInvoiceDTOList.size() > 0) {
-                                            LOG.d(TAG, serviceRequestInvoiceDTOList.toString());
-                                            try {
-                                                new GeneratedInvoiceTable().storeServiceReqInvoiceDetails(serviceRequestInvoiceDTOList);
-                                            } catch (Exception e) {
-
-                                            }
+                                ServiceRequestInvoiceModelFindResponse requestInvoiceModelFindResponse = JSONAdaptor.fromJSON(resStr, ServiceRequestInvoiceModelFindResponse.class);
+                                ResponseStatus responseStatus = requestInvoiceModelFindResponse.getStatus();
+                                if (responseStatus != null && responseStatus.getStatusCode() != null) {
+                                    status = responseStatus.getStatusCode();
+                                }
+                                if (status == 0) {
+                                    List<ServiceRequestInvoiceModel> serviceRequestInvoiceModels = requestInvoiceModelFindResponse.getResults();
+                                    if (serviceRequestInvoiceModels != null && serviceRequestInvoiceModels.size() > 0) {
+                                        try {
+                                            new GeneratedInvoiceTable().storeServiceReqInvoiceDetails(serviceRequestInvoiceModels);
+                                        } catch (Exception e) {
                                         }
-                                        Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
-                                        mainIntent.putExtra("USERCODE", Application.getInstance().getUserProfileUserIdOrGuid());
-                                        startActivity(mainIntent);
-                                        finish();
                                     }
-                                } else {
-                                    showAlert( getResources().getString(R.string.unable_to_process));
+                                    Intent mainIntent = new Intent(LoginActivity.this, TechOperationsActivity.class);
+                                    mainIntent.putExtra("USERCODE", Application.getInstance().getUserProfileUserIdOrGuid());
+                                    startActivity(mainIntent);
+                                    finish();
                                 }
                             } catch (IOException ioe) {
                                 showAlert("Unable to process your request. Please try again.");
@@ -558,12 +550,14 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                 }
 
             };
-            ServiceRequestInvoiceDTO serviceRequestInvoiceDTO = new ServiceRequestInvoiceDTO();
-            serviceRequestInvoiceDTO.setUserCode(userCode);
-            serviceRequestInvoiceDTO.setLastSyncTime(0L);
-            serviceRequestInvoiceDTO.setDefaultLocale("en_US");
-            LOG.d("Request===> ", serviceRequestInvoiceDTO.toString());
-            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.SYNC_REQ, JSONAdaptor.toJSON(serviceRequestInvoiceDTO), call);
+            ServiceRequestInvoiceModel serviceRequestInvoiceModel = new ServiceRequestInvoiceModel();
+            serviceRequestInvoiceModel.setUserId(user_guid);
+
+            long lastSyncTime = new CommonAction().updateSyncInProgress(ApplicationConstants.SYNC_GENERATED_INVOICE).getLastSyncTime();
+            serviceRequestInvoiceModel.setLastSyncTime(lastSyncTime);
+            serviceRequestInvoiceModel.setDefaultLocale("en_US");
+            LOG.d("Request===> ", serviceRequestInvoiceModel.toString());
+            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.SYNC_INVOICE_HISTORY_REQ, JSONAdaptor.toJSON(serviceRequestInvoiceModel), call);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NhanceException e) {

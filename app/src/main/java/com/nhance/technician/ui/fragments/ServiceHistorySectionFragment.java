@@ -26,7 +26,7 @@ import com.nhance.technician.datasets.GeneratedInvoiceTable;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
-import com.nhance.technician.model.ServiceRequestInvoiceDTO;
+import com.nhance.technician.model.newapis.ServiceRequestInvoiceModel;
 import com.nhance.technician.ui.custom.adapter.ServiceRequestHistoryAdapter;
 
 import java.util.List;
@@ -89,7 +89,7 @@ public class ServiceHistorySectionFragment extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
         setHasOptionsMenu(true);
         if (isVisibleToUser) {
-            GetStoredInvoiceTask getStoredInvoiceTask = new GetStoredInvoiceTask(Application.getInstance().getUserCode());
+            GetStoredInvoiceTask getStoredInvoiceTask = new GetStoredInvoiceTask(Application.getInstance().getUserProfileUserIdOrGuid());
             getStoredInvoiceTask.execute();
         }
     }
@@ -124,7 +124,7 @@ public class ServiceHistorySectionFragment extends Fragment {
                      dialog.dismiss();
                      try {
                          GeneratedInvoiceTable.clearAllServiceHistoryForUser(Application.getInstance().getUserCode());
-                         GetStoredInvoiceTask getStoredInvoiceTask = new GetStoredInvoiceTask(Application.getInstance().getUserCode());
+                         GetStoredInvoiceTask getStoredInvoiceTask = new GetStoredInvoiceTask(Application.getInstance().getUserProfileUserIdOrGuid());
                          getStoredInvoiceTask.execute();
                      } catch (NhanceException e) {
                          e.printStackTrace();
@@ -145,21 +145,21 @@ public class ServiceHistorySectionFragment extends Fragment {
          }
          return super.onOptionsItemSelected(item);
      }*/
-    public class GetStoredInvoiceTask extends AsyncTask<Void, Object, List<ServiceRequestInvoiceDTO>> {
+    public class GetStoredInvoiceTask extends AsyncTask<Void, Object, List<ServiceRequestInvoiceModel>> {
 
-        private final String mUserCode;
+        private final String mUser_guid;
 
         GetStoredInvoiceTask(String userCode) {
-            mUserCode = userCode;
+            mUser_guid = userCode;
         }
 
         @Override
-        protected List<ServiceRequestInvoiceDTO> doInBackground(Void... params) {
+        protected List<ServiceRequestInvoiceModel> doInBackground(Void... params) {
 
 
             try {
                 showProgress(true);
-                List<ServiceRequestInvoiceDTO> serviceRequestInvoiceDTOList = new GeneratedInvoiceTable().getServiceRequestInvoices(mUserCode);
+                List<ServiceRequestInvoiceModel> serviceRequestInvoiceDTOList = new GeneratedInvoiceTable().getServiceRequestInvoices(mUser_guid);
                 /*totalCashCollected = 0D;
                 totalOnlinePayment = 0D;
                 for (ServiceRequestInvoiceDTO serviceRequestInvoiceDTO : serviceRequestInvoiceDTOList) {
@@ -177,7 +177,7 @@ public class ServiceHistorySectionFragment extends Fragment {
         }
 
         @Override
-        protected void onPostExecute(List<ServiceRequestInvoiceDTO> serviceRequestInvoiceDTOList) {
+        protected void onPostExecute(List<ServiceRequestInvoiceModel> serviceRequestInvoiceDTOList) {
             showProgress(false);
 
             if (serviceRequestInvoiceDTOList != null && serviceRequestInvoiceDTOList.size()>0) {
@@ -230,7 +230,7 @@ public class ServiceHistorySectionFragment extends Fragment {
     private class UpdateViewBroadcastReceiver extends BroadcastReceiver {
         @Override
         public void onReceive(Context context, Intent intent) {
-            GetStoredInvoiceTask getStoredInvoiceTask = new GetStoredInvoiceTask(Application.getInstance().getUserCode());
+            GetStoredInvoiceTask getStoredInvoiceTask = new GetStoredInvoiceTask(Application.getInstance().getUserProfileUserIdOrGuid());
             getStoredInvoiceTask.execute();
         }
     }

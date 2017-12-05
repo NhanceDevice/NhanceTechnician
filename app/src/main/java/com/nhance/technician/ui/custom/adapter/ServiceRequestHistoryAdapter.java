@@ -9,7 +9,7 @@ import android.view.ViewGroup;
 
 import com.nhance.technician.R;
 import com.nhance.technician.app.ApplicationConstants;
-import com.nhance.technician.model.ServiceRequestInvoiceDTO;
+import com.nhance.technician.model.newapis.ServiceRequestInvoiceModel;
 import com.nhance.technician.util.DateUtil;
 import com.nhance.technician.util.Util;
 
@@ -22,9 +22,9 @@ import java.util.List;
 public class ServiceRequestHistoryAdapter extends RecyclerView.Adapter<ServiceRequestHistoryAdapter.ViewHolder> {
 
     Context mContext;
-    List<ServiceRequestInvoiceDTO> serviceRequestInvoiceDTOList;
+    List<ServiceRequestInvoiceModel> serviceRequestInvoiceDTOList;
 
-    public ServiceRequestHistoryAdapter(Context context, List<ServiceRequestInvoiceDTO> serviceRequestInvoiceDTOList) {
+    public ServiceRequestHistoryAdapter(Context context, List<ServiceRequestInvoiceModel> serviceRequestInvoiceDTOList) {
         this.mContext = context;
         this.serviceRequestInvoiceDTOList = serviceRequestInvoiceDTOList;
     }
@@ -38,31 +38,31 @@ public class ServiceRequestHistoryAdapter extends RecyclerView.Adapter<ServiceRe
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-            holder.serReqNoTV.setText(mContext.getResources().getString(R.string.srn)+" : "+serviceRequestInvoiceDTOList.get(position).getServiceRequestNumber());
-            holder.serReqSubjectTV.setText(serviceRequestInvoiceDTOList.get(position).getServiceRequestSubject());
+            holder.serReqNoTV.setText(mContext.getResources().getString(R.string.srn)+" : "+serviceRequestInvoiceDTOList.get(position).getSrn());
+            holder.serReqSubjectTV.setText(serviceRequestInvoiceDTOList.get(position).getSubject());
 
             holder.invoiceNoTV.setText(serviceRequestInvoiceDTOList.get(position).getInvoiceNumber()!=null?serviceRequestInvoiceDTOList.get(position).getInvoiceNumber():"");
         if(serviceRequestInvoiceDTOList.get(position).getCurrencyCode()!=null && serviceRequestInvoiceDTOList.get(position).getCurrencyCode().length()>0) {
-            holder.amountTV.setText(new String(Character.toChars(Integer.parseInt(serviceRequestInvoiceDTOList.get(position).getCurrencyCode(), 16))) +
-                    " " + Util.getFormattedAmount(serviceRequestInvoiceDTOList.get(position).getNetPaybleAmount()));
+            holder.amountTV.setText(Util.getCurrencySymbolFromUniCode(serviceRequestInvoiceDTOList.get(position).getCurrencyCode()) +
+                    " " + Util.getFormattedAmount(serviceRequestInvoiceDTOList.get(position).getNetPayableAmount()));
         }
         else{
-            holder.amountTV.setText(" " + Util.getFormattedAmount(serviceRequestInvoiceDTOList.get(position).getNetPaybleAmount()));
+            holder.amountTV.setText(" " + Util.getFormattedAmount(serviceRequestInvoiceDTOList.get(position).getNetPayableAmount()));
         }
-        if(serviceRequestInvoiceDTOList.get(position).getInvoiceGenerationDate()!= 0){
-            String dateStr = DateUtil.convertTimeInMillisToDateStr(serviceRequestInvoiceDTOList.get(position).getInvoiceGenerationDate(),"dd-MM-yyyy hh:mm a");
+        if(serviceRequestInvoiceDTOList.get(position).getCreatedDate() != null){
+            String dateStr = DateUtil.convertTimeInMillisToDateStr(serviceRequestInvoiceDTOList.get(position).getCreatedDate().getTime(),"dd-MM-yyyy hh:mm a");
             holder.invoiceDateTV.setText(dateStr);
         }
         String paymentType="";
-        if(serviceRequestInvoiceDTOList.get(position).getModeOfPayment()==ApplicationConstants.MODE_OF_PAYMENT_CASH){
+        if(serviceRequestInvoiceDTOList.get(position).getPaymentMode()==ApplicationConstants.MODE_OF_PAYMENT_CASH){
             paymentType = ApplicationConstants.CASH_PAYMENT+" - ";
-        }else if(serviceRequestInvoiceDTOList.get(position).getModeOfPayment()==ApplicationConstants.MODE_OF_PAYMENT_ONLINE){
+        }else if(serviceRequestInvoiceDTOList.get(position).getPaymentMode()==ApplicationConstants.MODE_OF_PAYMENT_ONLINE){
             paymentType = ApplicationConstants.ONLINE_PAYMENT+" - ";
         }
-        if(serviceRequestInvoiceDTOList.get(position).getStatus() == ApplicationConstants.PAYMENT_STATUS_PENDING_BILL_GENERATED){
+        if(serviceRequestInvoiceDTOList.get(position).getInvoiceStatus() != null && serviceRequestInvoiceDTOList.get(position).getInvoiceStatus() == ApplicationConstants.PAYMENT_STATUS_PENDING_BILL_GENERATED){
             holder.paymentStatusTV.setText(paymentType +mContext.getResources().getString(R.string.payment_pending));
             holder.paymentStatusTV.setTextColor(mContext.getResources().getColor(R.color.red));
-        }else if(serviceRequestInvoiceDTOList.get(position).getStatus() == ApplicationConstants.PAYMENT_STATUS_PAID){
+        }else if(serviceRequestInvoiceDTOList.get(position).getInvoiceStatus() != null && serviceRequestInvoiceDTOList.get(position).getInvoiceStatus() == ApplicationConstants.PAYMENT_STATUS_PAID){
             holder.paymentStatusTV.setText(paymentType +mContext.getResources().getString(R.string.payment_paid));
             holder.paymentStatusTV.setTextColor(mContext.getResources().getColor(R.color.green));
         }

@@ -2,32 +2,38 @@ package com.nhance.technician.ui.fragments;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.design.widget.TextInputEditText;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
-import android.text.TextUtils;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
 
 import com.nhance.technician.R;
+import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
-import com.nhance.technician.model.ServiceRequestDTO;
+import com.nhance.technician.model.Application;
+import com.nhance.technician.model.newapis.ResponseStatus;
+import com.nhance.technician.model.newapis.ServiceRequestModel;
+import com.nhance.technician.model.newapis.ServiceRequestModelFindResponse;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.BaseFragmentActivity;
-import com.nhance.technician.ui.TechOperationsActivity;
+import com.nhance.technician.ui.action.CommonAction;
+import com.nhance.technician.ui.custom.adapter.AssignedServiceRequestAdapter;
+import com.nhance.technician.ui.util.RecyclerviewClickListeners;
 
 import java.io.IOException;
+import java.util.List;
 
 import okhttp3.Call;
 import okhttp3.Callback;
@@ -42,10 +48,12 @@ public class SearchSRNFragment extends Fragment {
     public static final String TAG = SearchSRNFragment.class.getName();
 
     private View mProgressView;
-    LinearLayout searchFieldContainerView;
-    TextInputEditText serviceRequestnoTV;
 
-    private ServiceRequestDTO serviceRequestDTO;
+    private RelativeLayout service_request_summary_rl;
+    private RecyclerView service_request_rv;
+    private List<ServiceRequestModel> assignedServiceRequest;
+    private AssignedServiceRequestAdapter assignedServiceRequestAdapter;
+    private TextView service_not_available_tv;
 
     public SearchSRNFragment() {
     }
@@ -60,46 +68,37 @@ public class SearchSRNFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         final View rootView = inflater.inflate(R.layout.fragment_section_search_srn, container, false);
-
+        service_not_available_tv = (TextView) rootView.findViewById(R.id.service_not_available_tv);
+        service_request_summary_rl = (RelativeLayout) rootView.findViewById(R.id.service_request_summary_rl);
         mProgressView = rootView.findViewById(R.id.fetch_progress);
-        searchFieldContainerView = (LinearLayout) rootView.findViewById(R.id.searchfield_container);
-        serviceRequestnoTV = (TextInputEditText) rootView.findViewById(R.id.servicerequestnotv);
+        service_request_rv = (RecyclerView)rootView.findViewById(R.id.service_request_rv);
+        service_request_rv.setHasFixedSize(true);
+        LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
+        service_request_rv.setLayoutManager(layoutManager);
 
-        rootView.findViewById(R.id.get_details_button).setOnClickListener(new View.OnClickListener() {
+        service_request_rv.addOnItemTouchListener(new RecyclerviewClickListeners.RecyclerTouchListener(getActivity(),
+                service_request_rv, new RecyclerviewClickListeners.ClickListener() {
             @Override
-            public void onClick(View view) {
-
-                if (((BaseFragmentActivity)getActivity()).getmSystemService().getActiveNetworkInfo() == null) {
-                    ((BaseFragmentActivity)getActivity()).showAlert(getString(R.string.network_error));
-                    return;
-                }
-                else{
-                    ((TechOperationsActivity) getActivity()).hideSoftKeyPad();
-                    fetchServiceRequestDetails();
+            public void onClick(View view, int position) {
+                ServiceRequestModel serviceRequestModel = assignedServiceRequest.get(position);
+                try {
+                    ServiceRequestModel selectedServiceRequestModel = new CommonAction().getAssignedServiceRequestDetails(serviceRequestModel.getGuid());
+                    showGenerateInvoiceFragment(selectedServiceRequestModel);
+                } catch (NhanceException e) {
+                    e.printStackTrace();
+                    ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
                 }
             }
-        });
+
+            @Override
+            public void onLongClick(View view, int position) {
+
+            }
+        }));
+
+        fetchServiceRequestDetails();
+
         return rootView;
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-//        inflater.inflate(R.menu.menu_srn_search, menu);
-    }
-
-    public boolean onOptionsItemSelected(MenuItem item) {
-//        if (item.getItemId() == R.id.action_logout) {
-//
-//            ((TechOperationsActivity) getActivity()).logoutUser();
-//            return true;
-//        }
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        resetServiceReqNoField();
     }
 
     @Override
@@ -107,10 +106,10 @@ public class SearchSRNFragment extends Fragment {
         super.setUserVisibleHint(isVisibleToUser);
     }
 
-    private void showGenerateInvoiceFragment() {
+    private void showGenerateInvoiceFragment(ServiceRequestModel selectedServiceRequest) {
         FragmentTransaction trans = getFragmentManager().beginTransaction();
         GenerateInvoiceFragment generateInvoiceFragment = new GenerateInvoiceFragment();
-        generateInvoiceFragment.setServiceRequestDTO(serviceRequestDTO);
+        generateInvoiceFragment.setServiceRequest(selectedServiceRequest);
         trans.replace(R.id.root_frame, generateInvoiceFragment, RootFragment.FRAGMENT_TAG);
         trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
         trans.addToBackStack(TAG);
@@ -119,106 +118,139 @@ public class SearchSRNFragment extends Fragment {
 
 
     private void fetchServiceRequestDetails() {
-        boolean cancel = false;
-        String serviceReqNo = serviceRequestnoTV.getText().toString();
-        if (TextUtils.isEmpty(serviceReqNo)) {
-            serviceRequestnoTV.setError(getString(R.string.error_field_required));
-            cancel = true;
+
+        showProgress(true);
+        try {
+
+            Callback call = new Callback() {
+                @Override
+                public void onFailure(Call call, IOException e) {
+                    showProgress(false);
+                    /*((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");*/
+                    new PopulateSR().execute();
+                }
+
+                @Override
+                public void onResponse(Call call, Response response) {
+                    showProgress(false);
+                    if (response.isSuccessful()) {
+                        int responseCode = response.code();
+
+                        if (responseCode == 200) {
+                            try {
+                                String resStr = response.body().string();
+                                LOG.d("fetchServiceRequestDetails", resStr);
+
+                                int status = 0;
+
+                                ServiceRequestModelFindResponse serviceRequestModelFindResponse = JSONAdaptor.fromJSON(resStr, ServiceRequestModelFindResponse.class);
+                                ResponseStatus responseStatus = serviceRequestModelFindResponse.getStatus();
+                                if (responseStatus != null && responseStatus.getStatusCode() != null) {
+                                    status = responseStatus.getStatusCode();
+                                }
+                                if (status > 0) {
+                                   /* List<ErrorMessage> errorMessages = responseStatus.getErrorMessages();
+                                    if (errorMessages != null && errorMessages.size() > 0) {
+                                        ((BaseFragmentActivity)getActivity()).showAlert(errorMessages.get(0).getMessageDescription());
+                                    }*/new PopulateSR().execute();
+                                }else{
+                                    List<ServiceRequestModel> serviceRequestModelList = serviceRequestModelFindResponse.getResults();
+                                    if(serviceRequestModelList != null && serviceRequestModelList.size() > 0){
+                                        for(ServiceRequestModel serviceRequestModel : serviceRequestModelList){
+                                            new CommonAction().storeOrUpdateAssignedServiceReqDetails(serviceRequestModel);
+                                        }
+                                        new CommonAction().updateSyncDownloadStatus(ApplicationConstants.SYNC_ASSIGNED_SR);
+                                        new PopulateSR().execute();
+                                    }else
+                                        new PopulateSR().execute();
+                                }
+
+                            } catch (IOException ioe) {
+//                                ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
+                                new PopulateSR().execute();
+                            } catch (NhanceException e) {
+//                                ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
+                                new PopulateSR().execute();
+                            }
+                        } else if (responseCode == 404 || responseCode == 503) {
+                            LOG.d(TAG, "Server Unreachable. Please try after some time");
+//                            ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time");
+                            new PopulateSR().execute();
+                        } else if (responseCode == 500) {
+                            LOG.d(TAG, "Internal server error.");
+//                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
+                            new PopulateSR().execute();
+                        } else {
+//                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
+                            new PopulateSR().execute();
+                        }
+
+                    } else {
+//                        ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
+                        new PopulateSR().execute();
+                    }
+                }
+
+            };
+            ServiceRequestModel serviceRequestModel = new ServiceRequestModel();
+
+            serviceRequestModel.setUserId(Application.getInstance().getUserProfileUserIdOrGuid());
+            long lastSyncTime = new CommonAction().updateSyncInProgress(ApplicationConstants.SYNC_ASSIGNED_SR).getLastSyncTime();
+            serviceRequestModel.setLastSyncTime(lastSyncTime);
+            serviceRequestModel.setDefaultLocale("en_US");
+            RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.SYNC_SER_REQ_DETAILS, JSONAdaptor.toJSON(serviceRequestModel), call);
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NhanceException e) {
+            e.printStackTrace();
+        }
+    }
+
+    class PopulateSR extends AsyncTask<Void, Void, Exception> {
+
+        @Override
+        protected void onPreExecute() {
+            showProgress(true);
         }
 
-        if (cancel) {
-            serviceRequestnoTV.requestFocus();
-        } else {
-            showProgress(true);
+        @Override
+        protected Exception doInBackground(Void... voids) {
+            Exception exception = null;
             try {
-
-                Callback call = new Callback() {
-                    @Override
-                    public void onFailure(Call call, IOException e) {
-                        showProgress(false);
-                        serviceRequestDTO = null;
-                        serviceRequestDTO = new ServiceRequestDTO();
-                        serviceRequestDTO.setResponseStatus(1);
-                        serviceRequestDTO.setMessageDescription("Unable to process your request. Please try again.");
-                    }
-
-                    @Override
-                    public void onResponse(Call call, Response response) {
-                        showProgress(false);
-                        if (response.isSuccessful()) {
-                            int responseCode = response.code();
-
-                            if (responseCode == 200) {
-                                try {
-                                    String resStr = response.body().string();
-                                    LOG.d("fetchServiceRequestDetails", resStr);
-                                    serviceRequestDTO = JSONAdaptor.fromJSON(resStr, ServiceRequestDTO.class);
-
-                                    if (serviceRequestDTO != null) {
-                                        int status = 0;
-                                        if (serviceRequestDTO.getResponseStatus() != null) {
-                                            status = serviceRequestDTO.getResponseStatus();
-                                        }
-                                        if (status > 0) {
-                                            String errorMsg = serviceRequestDTO.getMessageDescription();
-                                            ((BaseFragmentActivity)getActivity()).showAlert(errorMsg);
-
-                                        } else {
-                                            LOG.d("Search Response : ", serviceRequestDTO.toString());
-                                            //showPartDetailsLayout();
-                                            showGenerateInvoiceFragment();
-                                        }
-                                    } else {
-                                        ((BaseFragmentActivity)getActivity()).showAlert(getResources().getString(R.string.unable_to_process));
-
-                                    }
-                                } catch (IOException ioe) {
-                                    ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
-
-
-                                } catch (NhanceException e) {
-                                    ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
-
-                                }
-                            } else if (responseCode == 404 || responseCode == 503) {
-                                LOG.d(TAG, "Server Unreachable. Please try after some time");
-                                ((BaseFragmentActivity)getActivity()).showAlert("Server Unreachable. Please try after some time");
-
-                            } else if (responseCode == 500) {
-                                LOG.d(TAG, "Internal server error.");
-                                ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
-
-                            } else {
-                                ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
-
-                            }
-
-                        } else {
-                            ((BaseFragmentActivity)getActivity()).showAlert("Error while communicating with server, please contact administrator.");
-
-                        }
-                    }
-
-                };
-                serviceRequestDTO = new ServiceRequestDTO();
-                serviceRequestDTO.setUserCode(((TechOperationsActivity) getActivity()).getUserCode());
-                serviceRequestDTO.setServiceRequestNumber(serviceReqNo);
-                serviceRequestDTO.setDefaultLocale("en_US");
-                LOG.d("Request===> ", serviceRequestDTO.toString());
-                RestCall.post(NhanceApplication.getApplication().getBackendUrl() + RestConstants.GET_SER_REQ_DETAILS, JSONAdaptor.toJSON(serviceRequestDTO), call);
-            } catch (IOException e) {
-                e.printStackTrace();
+                assignedServiceRequest = new CommonAction().getAssignedServiceRequest(Application.getInstance().getUserProfileUserIdOrGuid(), com.nhance.technician.model.newapis.enums.Status.PENDING.getCode());
+                if(assignedServiceRequest != null && assignedServiceRequest.size() > 0){
+                    updateToUI(assignedServiceRequest);
+                }
             } catch (NhanceException e) {
                 e.printStackTrace();
+                exception = e;
+            }
+
+            return exception;
+        }
+
+
+
+        @Override
+        protected void onPostExecute(Exception e) {
+            showProgress(false);
+            if(e != null){
+                service_not_available_tv.setVisibility(View.VISIBLE);
+                service_request_summary_rl.setVisibility(View.INVISIBLE);
+                ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
             }
         }
     }
 
-    private void resetServiceReqNoField() {
-        if (serviceRequestnoTV != null)
-            serviceRequestnoTV.setText("");
+    private void updateToUI(final List<ServiceRequestModel> serviceRequestModelList) {
+        getActivity().runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                assignedServiceRequestAdapter = new AssignedServiceRequestAdapter(serviceRequestModelList);
+                service_request_rv.setAdapter(assignedServiceRequestAdapter);
+            }
+        });
     }
-
 
     /**
      * Shows the progress UI and hides the login form.

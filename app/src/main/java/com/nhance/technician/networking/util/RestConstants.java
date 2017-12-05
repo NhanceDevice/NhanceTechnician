@@ -17,9 +17,9 @@ public interface RestConstants {
     String APPLICATION_VERSION_HEADER = "Application-Version";
 
     String LOGIN_REQ = "/auth";
-    String GET_SER_REQ_DETAILS = "/NHance-Module-Dk/rest/serviceRequest/technician/getServiceRequestDetails";
-    String UPLOAD_INVOICE = "/NHance-Module-Dk/rest/serviceRequest/technician/uploadInvoiceComponent";
-    String SYNC_REQ = "/NHance-Module-Auth/rest/user/sync";
+    String SYNC_SER_REQ_DETAILS = "/serviceRequest/findByUser";
+    String UPLOAD_INVOICE = "/serviceRequestInvoice/uploadInvoiceComponent";
+    String SYNC_INVOICE_HISTORY_REQ = "/serviceRequestInvoice/findInvoice";
     String GCM_REGISTRATION_REQ_URL = "/user/deviceRegistration";
 
     String OTP_REQUEST_URL						= "/auth/createotp";
