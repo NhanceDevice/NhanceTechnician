@@ -18,4 +18,16 @@
     <dimen name="underline_bottom_spacing">4dp</dimen>
     <dimen name="margin">8dp</dimen>
     <dimen name="tab_max_width">2000dp</dimen>
+
+    <dimen name="text_medium">16.0sp</dimen>
+    <dimen name="et_size">14.0sp</dimen>
+    <dimen name="text_large">18.0sp</dimen>
+
+    <dimen name="default_center_margin">40dp</dimen>
+    <dimen name="textview_mp_push_notification_title">15sp</dimen>
+    <dimen name="textview_mp_push_notification_message">14sp</dimen>
+    <dimen name="textview_mp_push_notification_time_ago">12sp</dimen>
+    <dimen name="default_center_margin_tab">10dp</dimen>
+    <dimen name="textview_helpdesk_title">15sp</dimen>
+    <dimen name="text_normal">14.0sp</dimen>
 </resources>

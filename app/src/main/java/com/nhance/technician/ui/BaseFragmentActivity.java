@@ -28,6 +28,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatImageView;
 import android.support.v7.widget.Toolbar;
+import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.util.Log;
 import android.view.View;
@@ -625,5 +626,48 @@ public abstract class BaseFragmentActivity extends AppCompatActivity implements 
                 }
             }
         });
+    }
+
+    public static String getCountryDialCode() {
+        String countryID;
+        String countryDialCode = "";
+
+        TelephonyManager telephonyMngr = (TelephonyManager) NhanceApplication.getContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+        countryID = telephonyMngr.getSimCountryIso().toUpperCase();
+        String[] arrCountryCode = NhanceApplication.getContext().getResources().getStringArray(R.array.CountryCodes);
+        for (int i = 0; i < arrCountryCode.length; i++) {
+            String[] arrDial = arrCountryCode[i].split(",");
+            if (arrDial[1].trim().equals(countryID.trim())) {
+                countryDialCode = arrDial[0];
+                break;
+            }
+        }
+
+        if (countryDialCode == null || countryDialCode.length() < 1) {
+            countryDialCode = "91";
+        }
+
+        return countryDialCode;
+    }
+
+    public static String getCountryID() {
+        String countryID;
+
+        TelephonyManager telephonyMngr = (TelephonyManager) NhanceApplication.getContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+        countryID = telephonyMngr.getSimCountryIso().toUpperCase();
+        String[] arrCountryCode = NhanceApplication.getContext().getResources().getStringArray(R.array.CountryCodes);
+        for (int i = 0; i < arrCountryCode.length; i++) {
+            String[] arrDial = arrCountryCode[i].split(",");
+            if (arrDial[1].trim().equals(countryID.trim())) {
+                countryID = arrDial[1].trim().toLowerCase();
+                break;
+            }
+        }
+        if (countryID == null || countryID.length() < 1) {
+            countryID = "in";
+        }
+        return countryID;
     }
 }

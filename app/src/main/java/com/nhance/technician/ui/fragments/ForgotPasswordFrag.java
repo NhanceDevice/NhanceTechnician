@@ -6,14 +6,21 @@ import android.os.Bundle;
 import android.support.design.widget.CoordinatorLayout;
 import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.Fragment;
+import android.support.v7.widget.AppCompatEditText;
+import android.support.v7.widget.AppCompatImageView;
 import android.support.v7.widget.AppCompatTextView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.LinearLayout;
 
 import com.nhance.technician.R;
 import com.nhance.technician.app.NhanceApplication;
@@ -29,9 +36,15 @@ import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.BaseFragmentActivity;
 import com.nhance.technician.ui.action.CommonAction;
+import com.nhance.technician.ui.custom.adapter.CountriesAdap;
+import com.nhance.technician.ui.custom.dialogplus.DialogPlus;
+import com.nhance.technician.ui.custom.dialogplus.OnBackPressListener;
+import com.nhance.technician.ui.custom.dialogplus.ViewHolder;
 import com.nhance.technician.ui.util.EditTextUtils;
+import com.nhance.technician.util.TypefaceUtils.TypefaceHelper;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import okhttp3.Call;
@@ -50,6 +63,12 @@ public class ForgotPasswordFrag extends Fragment {
     private AppCompatTextView screen_title_header_tv;
     private CoordinatorLayout coordinatorLayout;
 
+    private List<String> countryCodesList;
+    private LinearLayout countryCodeLay, mobileLay;
+    private AppCompatTextView countryFlagTv, countryISDCodeTv;
+    private AppCompatImageView countryFlagIv;
+    private CountriesAdap adapter;
+
     public ForgotPasswordFrag() {
     }
 
@@ -59,6 +78,18 @@ public class ForgotPasswordFrag extends Fragment {
     }
 
     private void initViews() {
+
+        countryCodesList = Arrays.asList(getResources().getStringArray(R.array.CountryCodes));
+        countryCodeLay = (LinearLayout) v.findViewById(R.id.country_lay);
+        mobileLay = (LinearLayout) v.findViewById(R.id.mobile_lay);
+        countryFlagTv = (AppCompatTextView) v.findViewById(R.id.flag_tv);
+        countryFlagIv = (AppCompatImageView) v.findViewById(R.id.flag_iv);
+        countryISDCodeTv = (AppCompatTextView) v.findViewById(R.id.country_mobile_code_tv);
+        //countryFlagTv.setText(localeToEmoji("IN"));
+        String countryID = ((BaseFragmentActivity)getActivity()).getCountryID();
+        countryFlagIv.setImageResource(getResources().getIdentifier("drawable/"
+                + countryID, null, ((BaseFragmentActivity)getActivity()).getPackageName()));
+        countryISDCodeTv.setText("+" + ((BaseFragmentActivity)getActivity()).getCountryDialCode());
 
         screen_title_header_tv = (AppCompatTextView)v.findViewById(R.id.screen_title_header_tv);
         coordinatorLayout = (CoordinatorLayout)v.findViewById(R.id.coordinatorLayout);
@@ -85,6 +116,56 @@ public class ForgotPasswordFrag extends Fragment {
         });
 
         sendBtn = (Button) v.findViewById(R.id.forgot_password_button);
+
+        countryCodeLay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ((BaseFragmentActivity)getActivity()).hideSoftKeyPad();
+                final DialogPlus dialog = DialogPlus.newDialog(getActivity())
+                        .setExpanded(false)
+                        .setGravity(Gravity.CENTER)
+                        .setContentHolder(new ViewHolder(R.layout.country_list_lay))
+                        .setCancelable(true)
+                        .setBackgroundColorResourceId(R.color.transparent)
+                        .setOnBackPressListener(new OnBackPressListener() {
+                            @Override
+                            public void onBackPressed(DialogPlus dialog) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .create(false);
+                dialog.show();
+
+                View dialogView = dialog.getHolderView();
+                AppCompatEditText searchableET = (AppCompatEditText) dialogView.findViewById(R.id.searchable_et);
+                AppCompatTextView noResultTv = (AppCompatTextView) dialogView.findViewById(R.id.no_result_tv);
+                TypefaceHelper.getInstance().setTypeface(searchableET, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
+                TypefaceHelper.getInstance().setTypeface(noResultTv, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
+                RecyclerView countryLv = (RecyclerView) dialogView.findViewById(R.id.country_lv);
+                adapter = new CountriesAdap(getActivity(), countryCodesList, searchableET, noResultTv, dialog);
+                countryLv.setAdapter(adapter);
+                countryLv.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+                adapter.setOnItemClickListener(new CountriesAdap.CountryClickListener() {
+                    @Override
+                    public void onCountryClick(View view, int position, String[] countryStrArray) {
+                        AppCompatTextView flagTv = (AppCompatTextView) view.findViewById(R.id.flag_tv);
+                        AppCompatTextView countryTv = (AppCompatTextView) view.findViewById(R.id.country_name_tv);
+                        countryFlagTv.setText(flagTv.getText());
+                        String pngName = countryStrArray[1].trim().toLowerCase();
+                        countryFlagIv.setImageResource(getResources().getIdentifier("drawable/" + pngName, null, getActivity().getPackageName()));
+
+                        Log.v("CountryISOCode", "" + countryStrArray[0]);
+                        String ISOCode = countryStrArray[0];
+                        countryISDCodeTv.setText("");
+                        countryISDCodeTv.setText("+" + ISOCode);
+                        countryISDCodeTv.invalidate();
+                        ((BaseFragmentActivity)getActivity()).hideSoftKeyPad();
+                        dialog.dismiss();
+                    }
+                });
+            }
+        });
     }
 
     @Override
@@ -277,9 +358,15 @@ public class ForgotPasswordFrag extends Fragment {
                 login.setLoginPrincipal(emailId);
             }
 
-            String isdCodeEditTextValue = "91";
-            login.setIsdCode(Integer.parseInt(isdCodeEditTextValue));
-            application.setIsdCode(Integer.parseInt(isdCodeEditTextValue));
+            String isdCode = EditTextUtils.getText(countryISDCodeTv);
+            if (isdCode != null && !isdCode.isEmpty() && isdCode.length() > 0) {
+                String isdCodeEditTextValue = isdCode.replace("+", "");
+
+                if (isdCodeEditTextValue != null && !isdCodeEditTextValue.isEmpty() && isdCodeEditTextValue.length() > 0) {
+                    login.setIsdCode(Integer.parseInt(isdCodeEditTextValue));
+                    application.setIsdCode(Integer.parseInt(isdCodeEditTextValue));
+                }
+            }
 
             new CommonAction().addCommonRequestParameters(login);
             login = (ChangePasswordModel)NhanceApplication.getModelToTakeActions();

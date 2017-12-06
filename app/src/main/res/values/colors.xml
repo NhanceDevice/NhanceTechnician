@@ -22,4 +22,8 @@
     <color name="dark_grey_color">#4a636f</color>
     <color name="greyed_out_button">#696969</color>
     <color name="tab_indicator_color">@color/colorAccent</color>
+    <color name="et_text_color">#BBBCBD</color>
+    <color name="dialog_plus_bg">#9F000000</color>
+    <color name="white_50">#80FFFFFF</color>
+    <color name="softwhite">#c6c6c6</color>
 </resources>
