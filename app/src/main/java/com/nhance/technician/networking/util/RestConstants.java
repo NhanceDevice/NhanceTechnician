@@ -19,7 +19,7 @@ public interface RestConstants {
     String LOGIN_REQ = "/auth";
     String SYNC_SER_REQ_DETAILS = "/serviceRequest/findByUser";
     String UPLOAD_INVOICE = "/serviceRequestInvoice/uploadInvoiceComponent";
-    String SYNC_INVOICE_HISTORY_REQ = "/serviceRequestInvoice/findInvoice";
+    String SYNC_INVOICE_HISTORY_REQ = "/serviceRequestInvoice/findByServiceEngineer";
     String GCM_REGISTRATION_REQ_URL = "/user/deviceRegistration";
 
     String OTP_REQUEST_URL						= "/auth/createotp";

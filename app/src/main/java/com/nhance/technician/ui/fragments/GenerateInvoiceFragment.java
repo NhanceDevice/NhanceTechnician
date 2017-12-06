@@ -497,7 +497,8 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
         amountACTV.setKeyListener(null);
 
         final TextView currenctCodeTV = (TextView) view.findViewById(R.id.currencycode_tv);
-        currenctCodeTV.setText(new String(Character.toChars(Integer.parseInt(currencyCode, 16))));
+        if(currencyCode != null)
+            currenctCodeTV.setText(Util.getCurrencySymbolFromUniCode(currencyCode));
 
         final ImageButton deleteButton = (ImageButton) view.findViewById(R.id.delete_button);
         deleteButton.setOnClickListener(new View.OnClickListener() {

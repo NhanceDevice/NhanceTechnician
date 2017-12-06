@@ -27,7 +27,7 @@ public class AssignedServiceRequestTable {
     public static String COLUMN_ADDRESS = "address";
     public static String COLUMN_SR_JSON = "sr_json";
     public static String COLUMN_PAYMENT_STATUS = "payment_status";
-    public static String COLUMN_USER_GUID = "user_code";
+    public static String COLUMN_USER_GUID = "user_guid";
 
     private static final String Assigned_ServiceRequest_Create_Table = "CREATE TABLE IF NOT EXISTS " + ASSIGNED_SR_TABLE
             + " ("

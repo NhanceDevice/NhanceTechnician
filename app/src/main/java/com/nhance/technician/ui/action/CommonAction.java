@@ -241,8 +241,8 @@ public class CommonAction {
         try {
             ContentValues invoiceValues = new ContentValues();
 
-            if (serviceRequestModel.getUserId() != null && serviceRequestModel.getUserId().length() > 0) {
-                invoiceValues.put(AssignedServiceRequestTable.COLUMN_USER_GUID, serviceRequestModel.getUserId());
+            if (Application.getInstance().getUserProfileUserIdOrGuid() != null && Application.getInstance().getUserProfileUserIdOrGuid().length() > 0) {
+                invoiceValues.put(AssignedServiceRequestTable.COLUMN_USER_GUID, Application.getInstance().getUserProfileUserIdOrGuid());
             }
 
             if (serviceRequestModel.getGuid() != null && serviceRequestModel.getGuid().length() > 0) {

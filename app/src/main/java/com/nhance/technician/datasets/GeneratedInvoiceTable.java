@@ -243,7 +243,7 @@ public class GeneratedInvoiceTable {
                     serviceRequestInvoiceDTO.setNetPayableAmount(cursor.getDouble((cursor.getColumnIndex(COLUMN_NET_PAYABLE_AMOUNT))));
                     serviceRequestInvoiceDTO.setUserId(cursor.getString((cursor.getColumnIndex(COLUMN_USER_GUID))));
                     serviceRequestInvoiceDTO.setCreatedDate(new Date(cursor.getLong(cursor.getColumnIndex(COLUMN_INVOICE_GENERATION_DATE))));
-//                    serviceRequestInvoiceDTO.setStatus(cursor.getInt(cursor.getColumnIndex(COLUMN_PAYMENT_STATUS)));
+                    serviceRequestInvoiceDTO.setInvoiceStatus(cursor.getInt(cursor.getColumnIndex(COLUMN_PAYMENT_STATUS)));
                     serviceRequestInvoiceDTO.setCurrencyCode(cursor.getString(cursor.getColumnIndex(COLUMN_CURRENCY_CODE)));
                     serviceRequestInvoiceDTO.setPaymentMode(cursor.getInt(cursor.getColumnIndex(COLUMN_PAYMENT_TYPE)));
                     serviceRequestInvoiceDTOList.add(serviceRequestInvoiceDTO);
