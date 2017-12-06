@@ -38,7 +38,7 @@ public class ServiceRequestHistoryAdapter extends RecyclerView.Adapter<ServiceRe
 
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-            holder.serReqNoTV.setText(mContext.getResources().getString(R.string.srn)+" : "+serviceRequestInvoiceDTOList.get(position).getSrn());
+            holder.serReqNoTV.setText(/*mContext.getResources().getString(R.string.srn)+" : "+*/serviceRequestInvoiceDTOList.get(position).getSrn());
             holder.serReqSubjectTV.setText(serviceRequestInvoiceDTOList.get(position).getSubject());
 
             holder.invoiceNoTV.setText(serviceRequestInvoiceDTOList.get(position).getInvoiceNumber()!=null?serviceRequestInvoiceDTOList.get(position).getInvoiceNumber():"");

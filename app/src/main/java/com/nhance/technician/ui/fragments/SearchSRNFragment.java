@@ -2,6 +2,8 @@ package com.nhance.technician.ui.fragments;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -30,7 +32,6 @@ import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.BaseFragmentActivity;
 import com.nhance.technician.ui.action.CommonAction;
 import com.nhance.technician.ui.custom.adapter.AssignedServiceRequestAdapter;
-import com.nhance.technician.ui.util.RecyclerviewClickListeners;
 
 import java.io.IOException;
 import java.util.List;
@@ -43,7 +44,7 @@ import okhttp3.Response;
  * Created by afsarhussain on 06/07/17.
  */
 
-public class SearchSRNFragment extends Fragment {
+public class SearchSRNFragment extends Fragment implements AssignedServiceRequestAdapter.AssignedServiceRequestAdapterInterface {
 
     public static final String TAG = SearchSRNFragment.class.getName();
 
@@ -76,7 +77,7 @@ public class SearchSRNFragment extends Fragment {
         LinearLayoutManager layoutManager = new LinearLayoutManager(getActivity());
         service_request_rv.setLayoutManager(layoutManager);
 
-        service_request_rv.addOnItemTouchListener(new RecyclerviewClickListeners.RecyclerTouchListener(getActivity(),
+        /*service_request_rv.addOnItemTouchListener(new RecyclerviewClickListeners.RecyclerTouchListener(getActivity(),
                 service_request_rv, new RecyclerviewClickListeners.ClickListener() {
             @Override
             public void onClick(View view, int position) {
@@ -94,7 +95,7 @@ public class SearchSRNFragment extends Fragment {
             public void onLongClick(View view, int position) {
 
             }
-        }));
+        }));*/
 
         fetchServiceRequestDetails();
 
@@ -206,6 +207,25 @@ public class SearchSRNFragment extends Fragment {
         }
     }
 
+    @Override
+    public void callCustomer(String customerMobileNumber, int selectedIndexPos) {
+        Intent intent = new Intent(Intent.ACTION_DIAL);
+        intent.setData(Uri.parse("tel:"+customerMobileNumber));
+        getActivity().startActivity(intent);
+    }
+
+    @Override
+    public void initiateInvoiceGenerator(ServiceRequestModel serviceRequestModel, int selectedIndexPos) {
+//        ServiceRequestModel serviceRequestModel = assignedServiceRequest.get(position);
+        try {
+            ServiceRequestModel selectedServiceRequestModel = new CommonAction().getAssignedServiceRequestDetails(serviceRequestModel.getGuid());
+            showGenerateInvoiceFragment(selectedServiceRequestModel);
+        } catch (NhanceException e) {
+            e.printStackTrace();
+            ((BaseFragmentActivity)getActivity()).showAlert(e.getLocalizedMessage());
+        }
+    }
+
     class PopulateSR extends AsyncTask<Void, Void, Exception> {
 
         @Override
@@ -246,7 +266,7 @@ public class SearchSRNFragment extends Fragment {
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                assignedServiceRequestAdapter = new AssignedServiceRequestAdapter(serviceRequestModelList);
+                assignedServiceRequestAdapter = new AssignedServiceRequestAdapter(serviceRequestModelList, SearchSRNFragment.this);
                 service_request_rv.setAdapter(assignedServiceRequestAdapter);
             }
         });

@@ -11,6 +11,7 @@ import com.nhance.technician.R;
 import com.nhance.technician.model.newapis.AddressModel;
 import com.nhance.technician.model.newapis.ContactModel;
 import com.nhance.technician.model.newapis.ServiceRequestModel;
+import com.nhance.technician.ui.util.EditTextUtils;
 import com.nhance.technician.util.DateUtil;
 
 import java.util.List;
@@ -44,8 +45,9 @@ public class AssignedServiceRequestAdapter extends RecyclerView.Adapter<Assigned
         }
     }
 
-    public AssignedServiceRequestAdapter(List<ServiceRequestModel> requestModels) {
+    public AssignedServiceRequestAdapter(List<ServiceRequestModel> requestModels, AssignedServiceRequestAdapterInterface assignedServiceRequestAdapterInterface) {
         this.serviceRequestModelList = requestModels;
+        mAssignedServiceRequestAdapterInterface = assignedServiceRequestAdapterInterface;
     }
 
     @Override
@@ -95,11 +97,46 @@ public class AssignedServiceRequestAdapter extends RecyclerView.Adapter<Assigned
                 stringBuilder.append(contactModel.getMobile());
 
             holder.mobile_number_tv.setText(stringBuilder.toString());
+            holder.mobile_number_tv.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mAssignedServiceRequestAdapterInterface.callCustomer(EditTextUtils.getText(holder.mobile_number_tv), position);
+                }
+            });
+            /*holder.mobile_number_tv.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    mAssignedServiceRequestAdapterInterface.callCustomer(EditTextUtils.getText(holder.mobile_number_tv), position);
+                    return true;
+                }
+            });*/
         }
+
+        holder.mainLay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mAssignedServiceRequestAdapterInterface.initiateInvoiceGenerator(serviceRequestModel, position);
+            }
+        });
+
+        /*holder.mainLay.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                mAssignedServiceRequestAdapterInterface.initiateInvoiceGenerator(serviceRequestModel, position);
+                return true;
+            }
+        });*/
     }
 
     @Override
     public int getItemCount() {
         return serviceRequestModelList.size();
+    }
+
+    private AssignedServiceRequestAdapterInterface mAssignedServiceRequestAdapterInterface;
+
+    public interface AssignedServiceRequestAdapterInterface{
+        void callCustomer(final String customerMobileNumber, final int selectedIndexPos);
+        void initiateInvoiceGenerator(final ServiceRequestModel serviceRequestModel, final int selectedIndexPos);
     }
 }
