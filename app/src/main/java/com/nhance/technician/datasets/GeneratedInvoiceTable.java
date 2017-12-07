@@ -150,8 +150,8 @@ public class GeneratedInvoiceTable {
             if (serviceRequestInvoiceDTO.getNetPayableAmount() != null) {
                 invoiceValues.put(GeneratedInvoiceTable.COLUMN_NET_PAYABLE_AMOUNT, serviceRequestInvoiceDTO.getNetPayableAmount());
             }
-            if (serviceRequestInvoiceDTO.getUserId() != null && serviceRequestInvoiceDTO.getUserId().length() > 0) {
-                invoiceValues.put(GeneratedInvoiceTable.COLUMN_USER_GUID, serviceRequestInvoiceDTO.getUserId());
+            if (Application.getInstance().getUserProfileUserIdOrGuid() != null && Application.getInstance().getUserProfileUserIdOrGuid().length() > 0) {
+                invoiceValues.put(GeneratedInvoiceTable.COLUMN_USER_GUID, Application.getInstance().getUserProfileUserIdOrGuid());
             }
             if (serviceRequestInvoiceDTO.getUserName() != null && serviceRequestInvoiceDTO.getUserName().length() > 0) {
                 invoiceValues.put(GeneratedInvoiceTable.COLUMN_CUSTOMER_NAME, serviceRequestInvoiceDTO.getUserName());

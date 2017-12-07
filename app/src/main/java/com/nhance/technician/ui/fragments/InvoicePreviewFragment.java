@@ -24,6 +24,7 @@ import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.datasets.GeneratedInvoiceTable;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
+import com.nhance.technician.model.Application;
 import com.nhance.technician.model.newapis.ErrorMessage;
 import com.nhance.technician.model.newapis.ResponseStatus;
 import com.nhance.technician.model.newapis.ServiceRequestInvoiceComponentModel;
@@ -271,7 +272,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
             serviceRequestInvoiceDTO.setSubject(serviceRequestDTO.getSubject());
             serviceRequestInvoiceDTO.setUserName(serviceRequestDTO.getUserName());
             serviceRequestInvoiceDTO.setCurrencyCode(serviceRequestDTO.getCurrencyCode());
-            serviceRequestInvoiceDTO.setUserId(serviceRequestDTO.getUserId());
+            serviceRequestInvoiceDTO.setUserId(Application.getInstance().getUserProfileUserIdOrGuid());
             serviceRequestInvoiceDTO.setSrn(serviceRequestDTO.getSrn());
             serviceRequestInvoiceDTO.setServiceRequestGuid(serviceRequestDTO.getGuid());
             serviceRequestInvoiceDTO.setBaseAmount(serviceRequestDTO.getAmount());
