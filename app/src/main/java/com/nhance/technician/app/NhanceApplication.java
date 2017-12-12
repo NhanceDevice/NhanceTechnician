@@ -25,6 +25,8 @@ import com.nhance.technician.model.BaseModel;
 import com.nhance.technician.model.Location;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.receiver.NetworkConnectivityReceiver;
+import com.nhance.technician.ui.BaseFragmentActivity;
+import com.nhance.technician.util.AccessPreferences;
 import com.nhance.technician.util.TypefaceUtils.TypefaceHelper;
 import com.nhance.technician.util.Util;
 
@@ -89,6 +91,11 @@ public class NhanceApplication extends Application implements ApplicationConstan
         super.attachBaseContext(base);
     }
 
+    private final int QA_PADDING = 1;
+    private final int DEMO_PADDING = 2;
+    private final int PROD_PADDING = 3;
+    private int paddingType = PROD_PADDING;
+
     @Override
     public void onCreate() {
         super.onCreate();
@@ -97,6 +104,22 @@ public class NhanceApplication extends Application implements ApplicationConstan
         registerActivityLifecycleCallbacks(handler);
         registerComponentCallbacks(handler);
         LOG.d(TAG, "Oncreate Called.");
+
+        PACKAGE_NAME = getApplicationContext().getPackageName();
+        paddingType = QA_PADDING;
+
+        switch (paddingType){
+            case QA_PADDING:
+            {
+                PACKAGE_NAME = "dev."+PACKAGE_NAME;
+                break;
+            }
+            case DEMO_PADDING:
+            {
+                PACKAGE_NAME = "demo."+PACKAGE_NAME;
+                break;
+            }
+        }
 
         try {
             versionCode = getPackageManager().getPackageInfo(getPackageName(), 0).versionCode;
@@ -129,7 +152,7 @@ public class NhanceApplication extends Application implements ApplicationConstan
             resources = getResources();
             modelToTakeAction = new Hashtable<String, BaseModel>();
 
-            backendUrl = resources.getString(R.string.backend_url);
+            initializeBackendURL();//backendUrl = resources.getString(R.string.backend_url);
             int logLevel = LOG.VERBOSE;
             LOG.setLogLevel(logLevel);
 
@@ -154,6 +177,27 @@ public class NhanceApplication extends Application implements ApplicationConstan
         }
     }
 
+    public static String PACKAGE_NAME = "";
+
+    public static String devPackageName = "dev.com.nhance.technician";
+    public static String demoPackageName = "demo.com.nhance.technician";
+    public static String prodPackageName = "com.nhance.technician";
+
+    private void initializeBackendURL() {
+        backendUrl = AccessPreferences.get(NhanceApplication.getContext(), ApplicationConstants.NHANCE_SERVER_URL, "");
+        if(backendUrl!=null & backendUrl.trim().equalsIgnoreCase("")){
+            if(BaseFragmentActivity.getCountryDialCode().equals("971") || BaseFragmentActivity.getCountryDialCode().equals("+971")){
+                backendUrl = resources.getString(R.string.ae_production_backend_url);
+            }else if(PACKAGE_NAME.equalsIgnoreCase(NhanceApplication.devPackageName)){
+                backendUrl = resources.getString(R.string.qa_backend_url);
+            }else if(PACKAGE_NAME.equalsIgnoreCase(NhanceApplication.demoPackageName)){
+                backendUrl = resources.getString(R.string.demo_backend_url);
+            }else if(PACKAGE_NAME.equalsIgnoreCase(NhanceApplication.prodPackageName)){
+                backendUrl = resources.getString(R.string.in_production_backend_url);
+            }
+            AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.NHANCE_SERVER_URL, backendUrl);
+        }
+    }
 
     private String applicationFolderPath;
     private String applicationUserFolderPath = Environment.getExternalStorageDirectory().getAbsolutePath();

@@ -440,12 +440,12 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                     }
 
                     servicePartDTO.setQuantity(1);
-                    servicePartDTO.setCalculatedAmount(servicePartDTO.getAmount());
+                    servicePartDTO.setCalculatedAmount(servicePartDTO.getActualSparePartAmount());
 
                     selectedPartsBasedOnTag.put(rowTag, servicePartDTO);
                     selectedPartsBasedOnPartName.put(selectedPart, servicePartDTO);
 
-                    amountACTV.setText(Util.getFormattedAmount(servicePartDTO.getAmount()));
+                    amountACTV.setText(Util.getFormattedAmount(servicePartDTO.getActualSparePartAmount()));
                     quantityACTV.setSelection(1);
                 }
             }
@@ -463,7 +463,7 @@ public class GenerateInvoiceFragment extends Fragment implements ApplicationCons
                 if(oldServicePartDTO != null){
                     oldServicePartDTO.setQuantity(quantity.intValue());
 
-                    double totalAmount = oldServicePartDTO.getAmount()*quantity.intValue();
+                    double totalAmount = oldServicePartDTO.getActualSparePartAmount()*quantity.intValue();
 
                     oldServicePartDTO.setCalculatedAmount(totalAmount);
                     oldServicePartDTO.setAmount(totalAmount);

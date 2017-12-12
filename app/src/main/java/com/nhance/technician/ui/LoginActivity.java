@@ -12,8 +12,13 @@ import android.support.design.widget.TextInputLayout;
 import android.support.v4.app.ActivityCompat;
 import android.support.v7.widget.AppCompatEditText;
 import android.support.v7.widget.AppCompatImageButton;
+import android.support.v7.widget.AppCompatImageView;
 import android.support.v7.widget.AppCompatTextView;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.text.TextUtils;
+import android.util.Log;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
@@ -22,6 +27,7 @@ import android.view.animation.AnimationUtils;
 import android.view.inputmethod.EditorInfo;
 import android.widget.AutoCompleteTextView;
 import android.widget.Button;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,11 +46,18 @@ import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
 import com.nhance.technician.networking.util.RestConstants;
 import com.nhance.technician.ui.action.CommonAction;
+import com.nhance.technician.ui.custom.adapter.CountriesAdap;
+import com.nhance.technician.ui.custom.dialogplus.DialogPlus;
+import com.nhance.technician.ui.custom.dialogplus.OnBackPressListener;
+import com.nhance.technician.ui.custom.dialogplus.ViewHolder;
+import com.nhance.technician.ui.util.EditTextUtils;
 import com.nhance.technician.ui.util.KeyboardWatcher;
 import com.nhance.technician.util.AccessPreferences;
+import com.nhance.technician.util.TypefaceUtils.TypefaceHelper;
 import com.nhance.technician.util.Util;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.List;
 
@@ -74,6 +87,12 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
 
     private String[] permissions = null;
     private final int RequestId = 132;
+
+    private List<String> countryCodesList;
+    private LinearLayout countryCodeLay, mobileLay;
+    private AppCompatTextView countryFlagTv, countryISDCodeTv;
+    private AppCompatImageView countryFlagIv;
+    private CountriesAdap adapter;
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
@@ -131,17 +150,34 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_login, getResources().getString(R.string.login));
+
+        countryCodesList = Arrays.asList(getResources().getStringArray(R.array.CountryCodes));
+        countryCodeLay = (LinearLayout) findViewById(R.id.country_lay);
+        mobileLay = (LinearLayout) findViewById(R.id.mobile_lay);
+        countryFlagTv = (AppCompatTextView) findViewById(R.id.flag_tv);
+        countryFlagIv = (AppCompatImageView) findViewById(R.id.flag_iv);
+        countryISDCodeTv = (AppCompatTextView) findViewById(R.id.country_mobile_code_tv);
+        TypefaceHelper.getInstance().setTypeface(countryISDCodeTv, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
+        //countryFlagTv.setText(localeToEmoji("IN"));
+        String countryID = getCountryID();
+        countryFlagIv.setImageResource(getResources().getIdentifier("drawable/"
+                + countryID, null, getPackageName()));
+        countryISDCodeTv.setText("+" + getCountryDialCode());
+
         // Set up the login form.
         coordinatorLayout = (CoordinatorLayout) findViewById(R.id.coordinatorLayout);
         mMobileNoView = (AutoCompleteTextView) findViewById(R.id.mobileno);
+        TypefaceHelper.getInstance().setTypeface(mMobileNoView, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
 
         copyrightTv = (AppCompatTextView)findViewById(R.id.copyright_tv);
         versionTv = (AppCompatTextView)findViewById(R.id.version_no_tv);
-
         copyrightTv.setText(getResources().getString(R.string.copyright));
         versionTv.setText(Util.getAppVersion(LoginActivity.this));
+        TypefaceHelper.getInstance().setTypeface(versionTv, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
+        TypefaceHelper.getInstance().setTypeface(copyrightTv, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
 
         frgtPswdTv = (TextView)findViewById(R.id.frgt_pswd_tv);
+        TypefaceHelper.getInstance().setTypeface(frgtPswdTv, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
         frgtPswdTv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -228,6 +264,56 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
         keyboardWatcher.setListener(this);
 
         permissionsCheckInstallation();
+
+        countryCodeLay.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                hideSoftKeyPad();
+                final DialogPlus dialog = DialogPlus.newDialog(LoginActivity.this)
+                        .setExpanded(false)
+                        .setGravity(Gravity.CENTER)
+                        .setContentHolder(new ViewHolder(R.layout.country_list_lay))
+                        .setCancelable(true)
+                        .setBackgroundColorResourceId(R.color.transparent)
+                        .setOnBackPressListener(new OnBackPressListener() {
+                            @Override
+                            public void onBackPressed(DialogPlus dialog) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .create(false);
+                dialog.show();
+
+                View dialogView = dialog.getHolderView();
+                AppCompatEditText searchableET = (AppCompatEditText) dialogView.findViewById(R.id.searchable_et);
+                AppCompatTextView noResultTv = (AppCompatTextView) dialogView.findViewById(R.id.no_result_tv);
+                TypefaceHelper.getInstance().setTypeface(searchableET, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
+                TypefaceHelper.getInstance().setTypeface(noResultTv, TypefaceHelper.getFont(TypefaceHelper.FONT.LIGHT));
+                RecyclerView countryLv = (RecyclerView) dialogView.findViewById(R.id.country_lv);
+                adapter = new CountriesAdap(LoginActivity.this, countryCodesList, searchableET, noResultTv, dialog);
+                countryLv.setAdapter(adapter);
+                countryLv.setLayoutManager(new LinearLayoutManager(LoginActivity.this));
+
+                adapter.setOnItemClickListener(new CountriesAdap.CountryClickListener() {
+                    @Override
+                    public void onCountryClick(View view, int position, String[] countryStrArray) {
+                        AppCompatTextView flagTv = (AppCompatTextView) view.findViewById(R.id.flag_tv);
+                        AppCompatTextView countryTv = (AppCompatTextView) view.findViewById(R.id.country_name_tv);
+                        countryFlagTv.setText(flagTv.getText());
+                        String pngName = countryStrArray[1].trim().toLowerCase();
+                        countryFlagIv.setImageResource(getResources().getIdentifier("drawable/" + pngName, null, getPackageName()));
+
+                        Log.v("CountryISOCode", "" + countryStrArray[0]);
+                        String ISOCode = countryStrArray[0];
+                        countryISDCodeTv.setText("");
+                        countryISDCodeTv.setText("+" + ISOCode);
+                        countryISDCodeTv.invalidate();
+                        hideSoftKeyPad();
+                        dialog.dismiss();
+                    }
+                });
+            }
+        });
 
         /*Application application = Application.getInstance();
         application.setUserCode("11000003");
@@ -414,11 +500,41 @@ public class LoginActivity extends BaseFragmentActivity implements KeyboardWatch
                     }
 
                 };
+
                 sellerLoginDTO = new SellerLoginDTO();
+
+                String isdCode = EditTextUtils.getText(countryISDCodeTv);
+                if (isdCode != null && !isdCode.isEmpty() && isdCode.length() > 0) {
+                    String isdCodeEditTextValue = isdCode.replace("+", "");
+
+                    if (isdCodeEditTextValue != null && !isdCodeEditTextValue.isEmpty() && isdCodeEditTextValue.length() > 0) {
+                        Application.getInstance().setIsdCode(Integer.parseInt(isdCodeEditTextValue));
+                        sellerLoginDTO.setIsdCode(isdCodeEditTextValue);
+                    }
+                    if(isdCodeEditTextValue.trim().equalsIgnoreCase("971") && NhanceApplication.PACKAGE_NAME.equalsIgnoreCase(NhanceApplication.prodPackageName)){
+                        NhanceApplication.getApplication().setBackendUrl(getResources().getString(R.string.ae_production_backend_url));;
+                        AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.NHANCE_SERVER_URL, NhanceApplication.getApplication().getBackendUrl());
+                    }else{
+                        String backendUrl = null;
+                        if(NhanceApplication.PACKAGE_NAME.equalsIgnoreCase(NhanceApplication.devPackageName)){
+                            backendUrl = getResources().getString(R.string.qa_backend_url);
+                        }else if(NhanceApplication.PACKAGE_NAME.equalsIgnoreCase(NhanceApplication.demoPackageName)){
+                            backendUrl = getResources().getString(R.string.demo_backend_url);
+                        }else if(NhanceApplication.PACKAGE_NAME.equalsIgnoreCase(NhanceApplication.prodPackageName)){
+                            backendUrl = getResources().getString(R.string.in_production_backend_url);
+                        }
+
+                        if(isdCodeEditTextValue.trim().equalsIgnoreCase("971")){
+                            backendUrl = getResources().getString(R.string.ae_production_backend_url);
+                        }
+
+                        NhanceApplication.getApplication().setBackendUrl(backendUrl);
+                        AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.NHANCE_SERVER_URL, NhanceApplication.getApplication().getBackendUrl());
+                    }
+                }
+
                 sellerLoginDTO.setMobileNumber(mobileNo);
                 Application.getInstance().setMobileNumber(mobileNo);
-                sellerLoginDTO.setIsdCode("91");
-                Application.getInstance().setIsdCode(Integer.parseInt("91"));
                 sellerLoginDTO.setPassword(password);
                 sellerLoginDTO.setDefaultLocale("en_US");
                 sellerLoginDTO.setAppType(Application.getInstance().getApplicationType());

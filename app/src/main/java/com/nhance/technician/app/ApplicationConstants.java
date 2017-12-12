@@ -152,4 +152,6 @@ public interface ApplicationConstants {
     String REQUESTING_RESET_PASSWORD = "REQUESTING_RESET_PASSWORD";
 
     String CHANGE_PASSWORD_AFTER_OTP = "CHANGE PASSWORD AFTER OTP";
+
+    String NHANCE_SERVER_URL = "nhancenow_server_url";
 }

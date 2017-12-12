@@ -20,6 +20,7 @@ import com.nhance.technician.R;
 import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.exception.NhanceException;
 import com.nhance.technician.logger.LOG;
+import com.nhance.technician.model.ServicePartDTO;
 import com.nhance.technician.model.ServiceRequestDTO;
 import com.nhance.technician.networking.RestCall;
 import com.nhance.technician.networking.json.JSONAdaptor;
@@ -108,13 +109,17 @@ public class SearchSRNFragment extends Fragment {
     }
 
     private void showGenerateInvoiceFragment() {
-        FragmentTransaction trans = getFragmentManager().beginTransaction();
-        GenerateInvoiceFragment generateInvoiceFragment = new GenerateInvoiceFragment();
-        generateInvoiceFragment.setServiceRequestDTO(serviceRequestDTO);
-        trans.replace(R.id.root_frame, generateInvoiceFragment, RootFragment.FRAGMENT_TAG);
-        trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
-        trans.addToBackStack(TAG);
-        trans.commit();
+        if(serviceRequestDTO != null && serviceRequestDTO.getAmount() != null){
+            FragmentTransaction trans = getFragmentManager().beginTransaction();
+            GenerateInvoiceFragment generateInvoiceFragment = new GenerateInvoiceFragment();
+            generateInvoiceFragment.setServiceRequestDTO(serviceRequestDTO);
+            trans.replace(R.id.root_frame, generateInvoiceFragment, RootFragment.FRAGMENT_TAG);
+            trans.setTransition(FragmentTransaction.TRANSIT_FRAGMENT_OPEN);
+            trans.addToBackStack(TAG);
+            trans.commit();
+        }else{
+            ((BaseFragmentActivity)getActivity()).showAlert("Service amount not defined, could not generate invoice.");
+        }
     }
 
 
@@ -136,10 +141,11 @@ public class SearchSRNFragment extends Fragment {
                     @Override
                     public void onFailure(Call call, IOException e) {
                         showProgress(false);
-                        serviceRequestDTO = null;
+                        /*serviceRequestDTO = null;
                         serviceRequestDTO = new ServiceRequestDTO();
                         serviceRequestDTO.setResponseStatus(1);
-                        serviceRequestDTO.setMessageDescription("Unable to process your request. Please try again.");
+                        serviceRequestDTO.setMessageDescription("Unable to process your request. Please try again.");*/
+                        ((BaseFragmentActivity)getActivity()).showAlert("Unable to process your request. Please try again.");
                     }
 
                     @Override
@@ -165,6 +171,13 @@ public class SearchSRNFragment extends Fragment {
 
                                         } else {
                                             LOG.d("Search Response : ", serviceRequestDTO.toString());
+                                            if(serviceRequestDTO.getParts() != null){
+                                                for(int i=0; i<serviceRequestDTO.getParts().size(); i++){
+                                                    ServicePartDTO servicePartDTO = serviceRequestDTO.getParts().get(i);
+                                                    servicePartDTO.setActualSparePartAmount(servicePartDTO.getAmount());
+                                                    serviceRequestDTO.getParts().set(i, servicePartDTO);
+                                                }
+                                            }
                                             //showPartDetailsLayout();
                                             showGenerateInvoiceFragment();
                                         }

@@ -7,6 +7,7 @@ import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.datasets.UserProfileTable;
 import com.nhance.technician.exception.NhanceException;
+import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
 import com.nhance.technician.model.BaseModel;
 import com.nhance.technician.util.AccessPreferences;
@@ -72,7 +73,7 @@ public class CommonAction {
                 Integer userStatus = AccessPreferences.get(NhanceApplication.getContext(), ApplicationConstants.IS_USER_LOGGED_IN, ApplicationConstants.USER_NEW);
                 if (userStatus == ApplicationConstants.USER_LOGGED_IN) {
                     String loggedInUsersMobileNo = AccessPreferences.get(NhanceApplication.getContext(), ApplicationConstants.LOGGED_IN_USER, "");
-                    Log.d(CommonAction.class.getName(), "loggedInUsersMobileNo : " + loggedInUsersMobileNo);
+                    LOG.d(CommonAction.class.getName(), "loggedInUsersMobileNo : " + loggedInUsersMobileNo);
                     if (loggedInUsersMobileNo != null && loggedInUsersMobileNo.length() > 0) {
                         loadBasicUserDeatilsToApplicationModel(loggedInUsersMobileNo);
                         Application loadedApplication1 = Application.getInstance();

@@ -3,6 +3,7 @@ package com.nhance.technician.networking.downloadmanager.core.mainWorker;
 import android.util.Log;
 import android.webkit.MimeTypeMap;
 
+import com.nhance.technician.logger.LOG;
 import com.nhance.technician.networking.downloadmanager.Utils.helper.FileUtils;
 import com.nhance.technician.networking.downloadmanager.constants.DispatchEcode;
 import com.nhance.technician.networking.downloadmanager.constants.DispatchElevel;
@@ -76,7 +77,7 @@ public class AsyncStartDownload extends Thread{
                   deleteChunk(task);
                   generateNewChunk(task);
               }
-              Log.d("--------", "moderator start");
+              LOG.d("--------", "moderator start");
               moderator.start(task, downloadManagerListener);
               break;
 
@@ -108,7 +109,7 @@ public class AsyncStartDownload extends Thread{
             if (urlConnection == null) {
 //            	MyExtension.AS3_CONTEXT.dispatchStatusEventAsync(
 //    					DispatchEcode.EXCEPTION, DispatchElevel.OPEN_CONNECTION);
-                Log.d(DispatchEcode.EXCEPTION, DispatchElevel.OPEN_CONNECTION);
+                LOG.d(DispatchEcode.EXCEPTION, DispatchElevel.OPEN_CONNECTION);
                 return  false;
 			}
         } catch (MalformedURLException e) {
@@ -116,14 +117,14 @@ public class AsyncStartDownload extends Thread{
             e.printStackTrace();
 //            MyExtension.AS3_CONTEXT.dispatchStatusEventAsync(
 //					DispatchEcode.EXCEPTION, DispatchElevel.URL_INVALID);
-            Log.d(DispatchEcode.EXCEPTION, DispatchElevel.URL_INVALID);
+            LOG.d(DispatchEcode.EXCEPTION, DispatchElevel.URL_INVALID);
             return false;
             
         }catch (IOException e) {
 			e.printStackTrace();
 //			MyExtension.AS3_CONTEXT.dispatchStatusEventAsync(
 //					DispatchEcode.EXCEPTION, DispatchElevel.OPEN_CONNECTION);
-            Log.d(DispatchEcode.EXCEPTION, DispatchElevel.OPEN_CONNECTION);
+            LOG.d(DispatchEcode.EXCEPTION, DispatchElevel.OPEN_CONNECTION);
 			return false;
 		} 
         
@@ -134,11 +135,11 @@ public class AsyncStartDownload extends Thread{
 		}else {
 //			MyExtension.AS3_CONTEXT.dispatchStatusEventAsync(
 //					DispatchEcode.EXCEPTION, DispatchElevel.CONNECTION_ERROR);
-            Log.d(DispatchEcode.EXCEPTION, DispatchElevel.CONNECTION_ERROR);
+            LOG.d(DispatchEcode.EXCEPTION, DispatchElevel.CONNECTION_ERROR);
 			return false;
 		}
         
-//        Log.d("-------", "anything goes right");
+//        LOG.d("-------", "anything goes right");
         return true;
     }
 

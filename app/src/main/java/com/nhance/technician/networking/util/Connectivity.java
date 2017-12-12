@@ -9,6 +9,8 @@ import android.os.AsyncTask;
 import android.telephony.TelephonyManager;
 import android.util.Log;
 
+import com.nhance.technician.logger.LOG;
+
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
@@ -147,7 +149,7 @@ public class Connectivity {
         protected String doInBackground(String... paramVarArgs) {
 
             startTime = System.currentTimeMillis();
-            Log.d(TAG, "doInBackground: StartTime" + startTime);
+            LOG.d(TAG, "doInBackground: StartTime" + startTime);
 
             Bitmap bmp = null;
             try {
@@ -164,7 +166,7 @@ public class Connectivity {
 
                 if (null != bmp) {
                     endTime = System.currentTimeMillis();
-                    Log.d(TAG, "doInBackground: EndTIme" + endTime);
+                    LOG.d(TAG, "doInBackground: EndTIme" + endTime);
                     return lengthbmp + "";
                 }
             } catch (Exception e) {
@@ -181,7 +183,7 @@ public class Connectivity {
                 takenTime = endTime - startTime;
                 double s = (double) takenTime / 1000;
                 double speed = dataSize / s;
-                Log.d(TAG, "onPostExecute: " + "" + new DecimalFormat("##.##").format(speed) + "kb/second");
+                LOG.d(TAG, "onPostExecute: " + "" + new DecimalFormat("##.##").format(speed) + "kb/second");
             }
         }
     }

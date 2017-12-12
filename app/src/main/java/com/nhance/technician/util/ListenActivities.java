@@ -6,6 +6,8 @@ import android.os.Looper;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.nhance.technician.logger.LOG;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -35,7 +37,7 @@ public class ListenActivities extends Thread {
 
             String activityName = taskInfo.get(0).topActivity.getClassName();
 
-            Log.d("topActivity", "CURRENT Activity ::" + activityName);
+            LOG.d("topActivity", "CURRENT Activity ::" + activityName);
 
             if (activityName.equals("com.android.packageinstaller.UninstallerActivity")) {
                 // User has clicked on the Uninstall button under the Manage Apps settings

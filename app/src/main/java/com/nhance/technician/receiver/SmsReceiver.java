@@ -18,6 +18,7 @@ import android.telephony.SmsMessage;
 import android.util.Log;
 
 import com.nhance.technician.app.ApplicationConstants;
+import com.nhance.technician.logger.LOG;
 
 /*
 *
@@ -76,7 +77,7 @@ public class SmsReceiver extends BroadcastReceiver {
                     }
                     else
                     {
-                        Log.d(TAG,"SMS Listener is null");
+                        LOG.d(TAG,"SMS Listener is null");
                     }
                 }
             }
@@ -101,7 +102,7 @@ public class SmsReceiver extends BroadcastReceiver {
             int start = index + 2;
             int length = ApplicationConstants.OTP_LENGTH;
             code = message.substring(start, start + length);
-            Log.d(TAG,"Verification Code returned : "+code );
+            LOG.d(TAG,"Verification Code returned : "+code );
             return code;
         }
 

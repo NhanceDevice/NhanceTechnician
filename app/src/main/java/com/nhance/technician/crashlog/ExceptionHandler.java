@@ -32,17 +32,14 @@ Peter Hewitt
 package com.nhance.technician.crashlog;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Build;
-import android.util.Log;
 
 import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.NhanceApplication;
-import com.nhance.technician.model.Application;
-import com.nhance.technician.networking.util.RestConstants;
+import com.nhance.technician.logger.LOG;
 import com.nhance.technician.util.Util;
 
 import java.io.IOException;
@@ -79,7 +76,7 @@ public class ExceptionHandler {
      */
     public void register(final Context context) {
         this.context = context;
-        Log.i(TAG, "Registering default exceptions handler");
+        LOG.i(TAG, "Registering default exceptions handler");
 
         try {
 
@@ -109,14 +106,14 @@ public class ExceptionHandler {
         }
         String dateAndTime = Util.getDayTimeStringFromDate(new Date(), true);
 
-        final String crashLogIdentifierData =   "Brand : "+PHONE_BRAND+"\n"+
+        final String crashLOGIdentifierData =   "Brand : "+PHONE_BRAND+"\n"+
                                                 "Model : "+PHONE_MODEL+"\n"+
                                                 "Android OS : "+ANDROID_VERSION+"\n"+
                                                 "App Package : "+APP_PACKAGE+"\n"+
                                                 "App Version : "+APP_VERSION+"\n"+
                                                 "Date : "+dateAndTime+"\n";
-        Log.d(TAG, "Crash_Log_Identifier_Data : " + crashLogIdentifierData);
-        Log.d(TAG, "FILES_PATH: " + folderPath);
+        LOG.d(TAG, "Crash_LOG_Identifier_Data : " + crashLOGIdentifierData);
+        LOG.d(TAG, "FILES_PATH: " + folderPath);
 
         new Thread() {
             @Override
@@ -125,13 +122,13 @@ public class ExceptionHandler {
 //				submitStackTraces();
                 UncaughtExceptionHandler currentHandler = Thread.getDefaultUncaughtExceptionHandler();
                 if (currentHandler != null) {
-                    Log.d(TAG, "current handler class=" + currentHandler.getClass().getName());
+                    LOG.d(TAG, "current handler class=" + currentHandler.getClass().getName());
                 }
                 // don't register again if already registered
                 if (!(currentHandler instanceof DefaultExceptionHandler)) {
                     // Register default exceptions handler
                     Thread.setDefaultUncaughtExceptionHandler(
-                            new DefaultExceptionHandler(crashLogIdentifierData,currentHandler, context, folderPath));
+                            new DefaultExceptionHandler(crashLOGIdentifierData,currentHandler, context, folderPath));
                 }
             }
         }.start();
@@ -141,7 +138,7 @@ public class ExceptionHandler {
 
         Application application = Application.getInstance();
 
-        Intent intent = new Intent(context, CrashLogUploadService.class);
+        Intent intent = new Intent(context, CrashLOGUploadService.class);
 
         intent.putExtra(ApplicationConstants.MOBILE_NO_EXTRA, application.getMobileNumber());
         intent.putExtra(ApplicationConstants.EMAIL_ID_EXTRA, application.getEmailId());

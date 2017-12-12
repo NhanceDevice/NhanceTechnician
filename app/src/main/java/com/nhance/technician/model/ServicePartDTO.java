@@ -28,6 +28,9 @@ public class ServicePartDTO extends BaseModel {
     /** The amount. */
     private Double amount;
 
+    /** The amount. */
+    private Double actualSparePartAmount;
+
     /** The quantity. */
     private Integer quantity;
 
@@ -65,6 +68,14 @@ public class ServicePartDTO extends BaseModel {
      */
     public Double getAmount() {
         return amount;
+    }
+
+    public Double getActualSparePartAmount() {
+        return actualSparePartAmount;
+    }
+
+    public void setActualSparePartAmount(Double actualSparePartAmount) {
+        this.actualSparePartAmount = actualSparePartAmount;
     }
 
     /**

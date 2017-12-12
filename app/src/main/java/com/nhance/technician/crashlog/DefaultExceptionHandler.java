@@ -32,13 +32,10 @@ Peter Hewitt
 package com.nhance.technician.crashlog;
 
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
-import android.util.Log;
 
 import com.nhance.technician.app.ApplicationConstants;
-import com.nhance.technician.app.NhanceApplication;
-import com.nhance.technician.util.AccessPreferences;
+import com.nhance.technician.logger.LOG;
 import com.nhance.technician.util.Util;
 
 import java.io.BufferedWriter;
@@ -59,13 +56,13 @@ public class DefaultExceptionHandler implements UncaughtExceptionHandler {
 	private Context context;
 
 	private static final String TAG = DefaultExceptionHandler.class.getName();
-	private String crashLogIdentifierData;
+	private String crashLOGIdentifierData;
 	private String folderPath;
 
 	// constructor
-	public DefaultExceptionHandler(String crashLogIdentifierData, UncaughtExceptionHandler pDefaultExceptionHandler, Context context, String folderPath)
+	public DefaultExceptionHandler(String crashLOGIdentifierData, UncaughtExceptionHandler pDefaultExceptionHandler, Context context, String folderPath)
 	{
-		this.crashLogIdentifierData = crashLogIdentifierData;
+		this.crashLOGIdentifierData = crashLOGIdentifierData;
 		defaultExceptionHandler = pDefaultExceptionHandler;
 		this.context = context;
 		this.folderPath = folderPath;
@@ -83,7 +80,7 @@ public class DefaultExceptionHandler implements UncaughtExceptionHandler {
 			FileWriter fileWriter = new FileWriter(getFile(),true);
 			BufferedWriter bos = new BufferedWriter(fileWriter);
 			StringBuffer sb = new StringBuffer();
-			sb.append(crashLogIdentifierData);
+			sb.append(crashLOGIdentifierData);
 			sb.append(result.toString());
 			bos.write(sb.toString());
 			bos.flush();
@@ -96,7 +93,7 @@ public class DefaultExceptionHandler implements UncaughtExceptionHandler {
 		/*finally {
 			clearStackAndLaunchDefault();
 		}*/
-		Log.d(TAG, result.toString());	    
+		LOG.d(TAG, result.toString());	    
 		//call original handler  
 		defaultExceptionHandler.uncaughtException(t, e);
 	}
@@ -121,15 +118,15 @@ public class DefaultExceptionHandler implements UncaughtExceptionHandler {
 		
 		startIndex++;
 		
-		Log.i(TAG, "startIndex: "+startIndex);
-		Log.i(TAG, "endIndex: "+endIndex);
+		LOG.i(TAG, "startIndex: "+startIndex);
+		LOG.i(TAG, "endIndex: "+endIndex);
 		
 		lastFileId = Integer.parseInt(fileName.substring(startIndex, endIndex));
-		Log.i(TAG, "lastFileId: "+lastFileId);
+		LOG.i(TAG, "lastFileId: "+lastFileId);
 		lastFileId++;
-		Log.i(TAG, "New File Id: "+lastFileId);
+		LOG.i(TAG, "New File Id: "+lastFileId);
 		fileName = folderPath+"/"+ApplicationConstants.CRASH_LOG_FILES_NAME+ExceptionHandler.APP_VERSION.replace(".", "_")+"_"+String.valueOf(lastFileId)+ApplicationConstants.CRASH_LOG_FILES_EXTENSION;
-        Log.i(TAG, "New File Name: "+fileName);
+        LOG.i(TAG, "New File Name: "+fileName);
 		return fileName;
 	}
 	
@@ -172,9 +169,9 @@ public class DefaultExceptionHandler implements UncaughtExceptionHandler {
 		if(file.exists())
 		{
 			long size = file.length();
-			Log.d(TAG, "Size of crash log file: "+size);
+			LOG.d(TAG, "Size of crash log file: "+size);
 			int sizeStatus = Util.getSizeInFormat(size);
-			Log.d(TAG, "Size status of crash log file: "+sizeStatus);
+			LOG.d(TAG, "Size status of crash log file: "+sizeStatus);
 			if(sizeStatus == ApplicationConstants.MB_DATA)
 			{
 				fileName = getNewFileName(fileName);

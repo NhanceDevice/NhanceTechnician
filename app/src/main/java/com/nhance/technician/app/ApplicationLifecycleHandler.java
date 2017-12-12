@@ -9,6 +9,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 
+import com.nhance.technician.logger.LOG;
+
 /**
  * Created by RAHUL on 16-08-2016.
  */
@@ -30,7 +32,7 @@ public class ApplicationLifecycleHandler implements Application.ActivityLifecycl
         stateCounter++;
         Log.v("qw2", "" + stateCounter);
         if (isInBackground && stateCounter < 2) {
-            Log.d(TAG, "app went to foreground");
+            LOG.d(TAG, "app went to foreground");
             new Handler().postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -92,7 +94,7 @@ public class ApplicationLifecycleHandler implements Application.ActivityLifecycl
     @Override
     public void onTrimMemory(int i) {
         if (i == ComponentCallbacks2.TRIM_MEMORY_UI_HIDDEN) {
-            Log.d(TAG, "app went to background");
+            LOG.d(TAG, "app went to background");
             isInBackground = true;
         }
     }

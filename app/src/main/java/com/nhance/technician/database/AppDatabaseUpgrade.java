@@ -12,7 +12,6 @@ package com.nhance.technician.database;
 import android.database.Cursor;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import com.nhance.technician.database.migration.AddTableColumn;
 import com.nhance.technician.database.migration.DeleteTable;
@@ -20,6 +19,7 @@ import com.nhance.technician.database.migration.DeleteTableColumn;
 import com.nhance.technician.database.migration.RenameTableColumnName;
 import com.nhance.technician.database.migration.RenameTableName;
 import com.nhance.technician.exception.NhanceException;
+import com.nhance.technician.logger.LOG;
 
 import java.io.File;
 import java.util.Iterator;
@@ -75,97 +75,97 @@ public class AppDatabaseUpgrade {
 					for(DatabaseBaseModel databaseBaseModel : statements)
 					{
 						final Integer operationToExecute = databaseBaseModel.getOperationType();
-						Log.d(TAG, "operationToExecute: " + operationToExecute);
+						LOG.d(TAG, "operationToExecute: " + operationToExecute);
 
 						switch (operationToExecute) {
 							case RENAME_TABLE:
 							{
-								Log.d(TAG, "RENAME_TABLE operationToExecute");
+								LOG.d(TAG, "RENAME_TABLE operationToExecute");
 								RenameTableName renameTableName = (RenameTableName)databaseBaseModel;
 
 								if(renameTableName != null)
 								{
 									String oldTableName = renameTableName.getOldTableName();
-									Log.d(TAG, "oldTableName: " + oldTableName);
+									LOG.d(TAG, "oldTableName: " + oldTableName);
 									String newTableName = renameTableName.getNewTableName();
-									Log.d(TAG, "newTableName: " + newTableName);
+									LOG.d(TAG, "newTableName: " + newTableName);
 
 									if(alterTableName(oldTableName, newTableName))
-										Log.d(TAG, "RENAME_TABLE success");
+										LOG.d(TAG, "RENAME_TABLE success");
 									else
-										Log.d(TAG, "RENAME_TABLE failed");
+										LOG.d(TAG, "RENAME_TABLE failed");
 								}
 								else
-									Log.d(TAG, "RENAME_TABLE renameTableName failed");
+									LOG.d(TAG, "RENAME_TABLE renameTableName failed");
 
 								break;
 							}
 							case RENAME_TABLE_COLUMN:
 							{
-								Log.d(TAG, "RENAME_TABLE_COLUMN operationToExecute");
+								LOG.d(TAG, "RENAME_TABLE_COLUMN operationToExecute");
 
 								RenameTableColumnName renameTableColumnName = (RenameTableColumnName)databaseBaseModel;
 
 								if(renameTableColumnName != null)
 								{
 									String tableName = renameTableColumnName.getTableName();
-									Log.d(TAG, "tableName: " + tableName);
+									LOG.d(TAG, "tableName: " + tableName);
 
 									String oldTableColumnName = renameTableColumnName.getOldTableColumnName();
-									Log.d(TAG, "oldTableColumnName: " + oldTableColumnName);
+									LOG.d(TAG, "oldTableColumnName: " + oldTableColumnName);
 									String newTableColumnName = renameTableColumnName.getNewTableColumnName();
-									Log.d(TAG, "newTableColumnName: " + newTableColumnName);
+									LOG.d(TAG, "newTableColumnName: " + newTableColumnName);
 
 									if(renameTableColumnNames(tableName, oldTableColumnName, newTableColumnName))
-										Log.d(TAG, "RENAME_TABLE_COLUMN success");
+										LOG.d(TAG, "RENAME_TABLE_COLUMN success");
 									else
-										Log.d(TAG, "RENAME_TABLE_COLUMN failed");
+										LOG.d(TAG, "RENAME_TABLE_COLUMN failed");
 								}
 								else
-									Log.d(TAG, "RENAME_TABLE_COLUMN renameTableColumnName failed");
+									LOG.d(TAG, "RENAME_TABLE_COLUMN renameTableColumnName failed");
 
 								break;
 							}
 							case ADD_TABLE_COLUMN:
 							{
-								Log.d(TAG, "ADD_TABLE_COLUMN operationToExecute");
+								LOG.d(TAG, "ADD_TABLE_COLUMN operationToExecute");
 
 								AddTableColumn addTableColumn = (AddTableColumn)databaseBaseModel;
 
 								if(addTableColumn != null)
 								{
 									if(addTableColumn(addTableColumn))
-										Log.d(TAG, "ADD_TABLE_COLUMN success");
+										LOG.d(TAG, "ADD_TABLE_COLUMN success");
 									else
-										Log.d(TAG, "ADD_TABLE_COLUMN failed");
+										LOG.d(TAG, "ADD_TABLE_COLUMN failed");
 								}
 
 								break;
 							}
 							case DELETE_TABLE_COLUMN:
 							{
-								Log.d(TAG, "DELETE_TABLE_COLUMN operationToExecute");
+								LOG.d(TAG, "DELETE_TABLE_COLUMN operationToExecute");
 
 								DeleteTableColumn deleteTableColumn = (DeleteTableColumn)databaseBaseModel;
 
 								if(deleteTableColumn != null)
 								{
 									String tableName = deleteTableColumn.getTableName();
-									Log.d(TAG, "tableName: " + tableName);
+									LOG.d(TAG, "tableName: " + tableName);
 									String tableColumnNameToDelete = deleteTableColumn.getTableColumnName();
-									Log.d(TAG, "tableColumnNameToDelete: " + tableColumnNameToDelete);
+									LOG.d(TAG, "tableColumnNameToDelete: " + tableColumnNameToDelete);
 
 									if(deleteTableColumns(tableName, tableColumnNameToDelete))
-										Log.d(TAG, "DELETE_TABLE_COLUMN success");
+										LOG.d(TAG, "DELETE_TABLE_COLUMN success");
 									else
-										Log.d(TAG, "DELETE_TABLE_COLUMN failed");
+										LOG.d(TAG, "DELETE_TABLE_COLUMN failed");
 								}
 
 								break;
 							}
 							case DELETE_TABLE:
 							{
-								Log.d(TAG, "DELETE_TABLE operationToExecute");
+								LOG.d(TAG, "DELETE_TABLE operationToExecute");
 
 								DeleteTable deleteTable = (DeleteTable)databaseBaseModel;
 
@@ -174,9 +174,9 @@ public class AppDatabaseUpgrade {
 									String tableName = deleteTable.getTableName();
 
 									if(dropTable(tableName))
-										Log.d(TAG, "DELETE_TABLE success");
+										LOG.d(TAG, "DELETE_TABLE success");
 									else
-										Log.d(TAG, "DELETE_TABLE failed");
+										LOG.d(TAG, "DELETE_TABLE failed");
 								}
 								break;
 							}
@@ -274,20 +274,20 @@ public class AppDatabaseUpgrade {
 				int notNullIdx = cursor.getColumnIndexOrThrow(PRAGMA_INFO_TABLE_COLUMN_NOTNULL);
 				int dfltValueIdx = cursor.getColumnIndexOrThrow(PRAGMA_INFO_TABLE_COLUMN_DEFAULT_VALUE);
 				Boolean isAutoIncrement = tableHasAutoIncrement(tableName);
-				Log.d(TAG, "isAutoIncrement: " + isAutoIncrement);
+				LOG.d(TAG, "isAutoIncrement: " + isAutoIncrement);
 
 				while(cursor.moveToNext())
 				{
 					String columnName = cursor.getString(nameIdx);
-					Log.d(TAG, "columnName: " + columnName);
+					LOG.d(TAG, "columnName: " + columnName);
 					String columnType = cursor.getString(typeIdx);
-					Log.d(TAG, "columnType: " + columnType);
+					LOG.d(TAG, "columnType: " + columnType);
 					Integer notNull = cursor.getInt(notNullIdx);
-					Log.d(TAG, "notNull: " + notNull);
+					LOG.d(TAG, "notNull: " + notNull);
 					Integer defaultVal = cursor.getInt(dfltValueIdx);
-					Log.d(TAG, "defaultVal: " + defaultVal);
+					LOG.d(TAG, "defaultVal: " + defaultVal);
 					Integer pk = cursor.getInt(pkValueIdx);
-					Log.d(TAG, "pk: " + pk);
+					LOG.d(TAG, "pk: " + pk);
 
 					LinkedHashMap<String, Object> columnInfo = new LinkedHashMap<String, Object>();
 					columnInfo.put(PRAGMA_INFO_TABLE_COLUMN_PRIMARY_KEY, pk);
@@ -349,7 +349,7 @@ public class AppDatabaseUpgrade {
 			{
 				int nameIdx = res.getColumnIndexOrThrow(PRAGMA_INFO_TABLE_COLUMN_NAME);
 				String columnName = res.getString(nameIdx);
-				Log.d(TAG, "columnName: " + columnName);
+				LOG.d(TAG, "columnName: " + columnName);
 				if(columnName.equals(fieldName))
 					return true;
 			}
@@ -385,20 +385,20 @@ public class AppDatabaseUpgrade {
 			String tableName = addTableColumn.getTableName();
 
 			String columnName = addTableColumn.getNewTableColumnName();
-			Log.d(TAG, "columnName: " + columnName);
+			LOG.d(TAG, "columnName: " + columnName);
 
 			if(checkTableExists(tableName) && !isFieldExist(tableName, columnName))
 			{
 				Integer pk = addTableColumn.getIsPrimaryKey();
-				Log.d(TAG, "pk: " + pk);
+				LOG.d(TAG, "pk: " + pk);
 				Boolean isAutoIncrement = addTableColumn.isAutoIncrement();
-				Log.d(TAG, "isAutoIncrement: " + isAutoIncrement);
+				LOG.d(TAG, "isAutoIncrement: " + isAutoIncrement);
 				String columnType = addTableColumn.getColumnType();
-				Log.d(TAG, "columnType: " + columnType);
+				LOG.d(TAG, "columnType: " + columnType);
 				Integer notNull = addTableColumn.getIsNotNull();
-				Log.d(TAG, "notNull: " + notNull);
+				LOG.d(TAG, "notNull: " + notNull);
 				Integer defaultVal = addTableColumn.getDefaultVal();
-				Log.d(TAG, "defaultVal: " + defaultVal);
+				LOG.d(TAG, "defaultVal: " + defaultVal);
 
 				StringBuilder builder = new StringBuilder();
 
@@ -431,7 +431,7 @@ public class AppDatabaseUpgrade {
 				}
 
 				String statement = builder.toString();
-				Log.d(TAG, "statement: " + statement);
+				LOG.d(TAG, "statement: " + statement);
 
 				execSQL(statement);
 
@@ -587,7 +587,7 @@ public class AppDatabaseUpgrade {
 		String selectFromStatement = null;
 
 		String tempTableName = tableName+TEMPORARY_TABLE_CONSTANT;
-		Log.d(TAG, "tempTableName: " + tempTableName);
+		LOG.d(TAG, "tempTableName: " + tempTableName);
 
 		LinkedHashMap<String, LinkedHashMap<String, Object>> tempTableDetails = getTableDetails(tempTableName);
 
@@ -607,7 +607,7 @@ public class AppDatabaseUpgrade {
 			while(hasNext)
 			{
 				String columnName = iterator.next();
-				Log.d(TAG, "temp table columnName: " + columnName);
+				LOG.d(TAG, "temp table columnName: " + columnName);
 				builder.append(columnName);
 
 				hasNext = iterator.hasNext();
@@ -641,7 +641,7 @@ public class AppDatabaseUpgrade {
 			while(hasNext)
 			{
 				String columnName = iterator.next();
-				Log.d(TAG, "temp table columnName: " + columnName);
+				LOG.d(TAG, "temp table columnName: " + columnName);
 				builder.append(columnName);
 
 				hasNext = iterator.hasNext();
@@ -666,7 +666,7 @@ public class AppDatabaseUpgrade {
 		String selectFromStatement = null;
 
 		String tempTableName = tableName+TEMPORARY_TABLE_CONSTANT;
-		Log.d(TAG, "tempTableName: " + tempTableName);
+		LOG.d(TAG, "tempTableName: " + tempTableName);
 
 		LinkedHashMap<String, LinkedHashMap<String, Object>> tempTableDetails = getTableDetails(tempTableName);
 
@@ -686,7 +686,7 @@ public class AppDatabaseUpgrade {
 			while(hasNext)
 			{
 				String columnName = iterator.next();
-				Log.d(TAG, "temp table columnName: " + columnName);
+				LOG.d(TAG, "temp table columnName: " + columnName);
 				builder.append(columnName);
 
 				hasNext = iterator.hasNext();
@@ -720,7 +720,7 @@ public class AppDatabaseUpgrade {
 			while(hasNext)
 			{
 				String columnName = iterator.next();
-				Log.d(TAG, "temp table columnName: " + columnName);
+				LOG.d(TAG, "temp table columnName: " + columnName);
 
 				if(tempTableDetails.containsKey(columnName))
 				{
@@ -791,20 +791,20 @@ public class AppDatabaseUpgrade {
 								while(hasNext)
 								{
 									String existingColumnName = iterator.next();
-									Log.d(TAG, "existingColumnName: " + existingColumnName);
+									LOG.d(TAG, "existingColumnName: " + existingColumnName);
 
 									LinkedHashMap<String, Object> columnDefination = tableDetails.get(existingColumnName);
 
 									Integer pk = (Integer)columnDefination.get(PRAGMA_INFO_TABLE_COLUMN_PRIMARY_KEY);
-									Log.d(TAG, "pk: " + pk);
+									LOG.d(TAG, "pk: " + pk);
 									Boolean isAutoIncrement = (Boolean)columnDefination.get(PRAGMA_INFO_TABLE_COLUMN_ISAUTOINCREMENT);
-									Log.d(TAG, "isAutoIncrement: " + isAutoIncrement);
+									LOG.d(TAG, "isAutoIncrement: " + isAutoIncrement);
 									String columnType = (String)columnDefination.get(PRAGMA_INFO_TABLE_COLUMN_TYPE);
-									Log.d(TAG, "columnType: " + columnType);
+									LOG.d(TAG, "columnType: " + columnType);
 									Integer notNull = (Integer)columnDefination.get(PRAGMA_INFO_TABLE_COLUMN_NOTNULL);
-									Log.d(TAG, "notNull: " + notNull);
+									LOG.d(TAG, "notNull: " + notNull);
 									Integer defaultVal = (Integer)columnDefination.get(PRAGMA_INFO_TABLE_COLUMN_DEFAULT_VALUE);
-									Log.d(TAG, "defaultVal: " + defaultVal);
+									LOG.d(TAG, "defaultVal: " + defaultVal);
 
 									if(columnNames.containsKey(existingColumnName))
 									{
@@ -860,7 +860,7 @@ public class AppDatabaseUpgrade {
 
 								createStatment = builder.toString();
 
-								Log.d(TAG, "createStatment: " + createStatment);
+								LOG.d(TAG, "createStatment: " + createStatment);
 
 								break;
 							}
@@ -877,20 +877,20 @@ public class AppDatabaseUpgrade {
 								while(hasNext)
 								{
 									String existingColumnName = iterator.next();
-									Log.d(TAG, "existingColumnName: " + existingColumnName);
+									LOG.d(TAG, "existingColumnName: " + existingColumnName);
 
 									LinkedHashMap<String, Object> columnDefination = tableDetails.get(existingColumnName);
 
 									Integer pk = (Integer)columnDefination.get(PRAGMA_INFO_TABLE_COLUMN_PRIMARY_KEY);
-									Log.d(TAG, "pk: " + pk);
+									LOG.d(TAG, "pk: " + pk);
 									Boolean isAutoIncrement = (Boolean)columnDefination.get(PRAGMA_INFO_TABLE_COLUMN_ISAUTOINCREMENT);
-									Log.d(TAG, "isAutoIncrement: " + isAutoIncrement);
+									LOG.d(TAG, "isAutoIncrement: " + isAutoIncrement);
 									String columnType = (String)columnDefination.get(PRAGMA_INFO_TABLE_COLUMN_TYPE);
-									Log.d(TAG, "columnType: " + columnType);
+									LOG.d(TAG, "columnType: " + columnType);
 									Integer notNull = (Integer)columnDefination.get(PRAGMA_INFO_TABLE_COLUMN_NOTNULL);
-									Log.d(TAG, "notNull: " + notNull);
+									LOG.d(TAG, "notNull: " + notNull);
 									Integer defaultVal = (Integer)columnDefination.get(PRAGMA_INFO_TABLE_COLUMN_DEFAULT_VALUE);
-									Log.d(TAG, "defaultVal: " + defaultVal);
+									LOG.d(TAG, "defaultVal: " + defaultVal);
 
 									if(!columnNames.containsKey(existingColumnName))
 									{
@@ -935,7 +935,7 @@ public class AppDatabaseUpgrade {
 								}
 								createStatment = builder.toString();
 
-								Log.d(TAG, "createStatment: " + createStatment);
+								LOG.d(TAG, "createStatment: " + createStatment);
 
 								break;
 							}

@@ -73,7 +73,7 @@ public class GeneratedInvoiceTable {
 
     public static void createTables(SQLiteDatabase db) {
         db.execSQL(GeneratedInvoiceTable_Create_Table);
-        Log.d(TAG, " created");
+        LOG.d(TAG, " created");
     }
 
 

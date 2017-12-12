@@ -195,7 +195,7 @@ public class ValidateOTPFragment extends Fragment implements OTPAction.SMSReceiv
 
         if(!isValidateOtpDataValid())
         {
-            Log.d(TAG, "User data not valid so going to return from ValidateAndDoDirectTransfer");
+            LOG.d(TAG, "User data not valid so going to return from ValidateAndDoDirectTransfer");
             return;
         }
 

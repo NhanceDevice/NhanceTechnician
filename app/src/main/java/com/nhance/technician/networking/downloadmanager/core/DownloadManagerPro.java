@@ -2,8 +2,8 @@ package com.nhance.technician.networking.downloadmanager.core;
 
 import android.content.Context;
 import android.os.Environment;
-import android.util.Log;
 
+import com.nhance.technician.logger.LOG;
 import com.nhance.technician.networking.downloadmanager.Utils.helper.FileUtils;
 import com.nhance.technician.networking.downloadmanager.core.chunkWorker.Moderator;
 import com.nhance.technician.networking.downloadmanager.core.enums.QueueSort;
@@ -125,9 +125,9 @@ public class DownloadManagerPro {
             saveName = getUniqueName(saveName);
         else
             deleteSameDownloadNameTask(saveName);
-        Log.d("--------", "overwrite");
+        LOG.d("--------", "overwrite");
         chunk = setMaxChunk(chunk);
-        Log.d("--------", "ma chunk");
+        LOG.d("--------", "ma chunk");
         return insertNewTask(saveName, url, chunk, sdCardFolderAddress, priority);
     }
 
@@ -153,14 +153,14 @@ public class DownloadManagerPro {
     public void startDownload(int token) throws IOException {
 
         // switch on task state
-        Log.d("--------", "task state");
+        LOG.d("--------", "task state");
         Task task = tasksDataSource.getTaskInfo(token);
-        Log.d("--------", "task state 1");
+        LOG.d("--------", "task state 1");
         Thread asyncStartDownload
                 = new AsyncStartDownload(tasksDataSource, chunksDataSource, moderator, downloadManagerListener, task);
-        Log.d("--------", "define async download");
+        LOG.d("--------", "define async download");
         asyncStartDownload.start();
-        Log.d("--------", "define async download started");
+        LOG.d("--------", "define async download started");
     }
 
 
@@ -370,7 +370,7 @@ public class DownloadManagerPro {
     private int insertNewTask(String taskName, String url, int chunk, String save_address, boolean priority) {
         Task task = new Task(0, taskName, url, TaskStates.INIT, chunk, save_address, priority);
         task.id = (int) tasksDataSource.insertTask(task);
-        Log.d("--------", "task id "+String.valueOf(task.id));
+        LOG.d("--------", "task id "+String.valueOf(task.id));
         return task.id;
     }
 

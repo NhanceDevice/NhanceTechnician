@@ -17,6 +17,7 @@ import android.util.Log;
 
 import com.nhance.technician.app.NhanceApplication;
 import com.nhance.technician.exception.NhanceException;
+import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
 import com.nhance.technician.model.SellerLoginDTO;
 
@@ -64,7 +65,7 @@ public class UserProfileTable {
      */
     public static void createTables(SQLiteDatabase db) {
         db.execSQL(UserProfileTable_Create_Table);
-        Log.d(TAG, " created");
+        LOG.d(TAG, " created");
     }
 
     /**

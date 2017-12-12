@@ -26,6 +26,7 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.AppCompatImageView;
 import android.support.v7.widget.Toolbar;
+import android.telephony.TelephonyManager;
 import android.text.Html;
 import android.util.Log;
 import android.view.View;
@@ -37,6 +38,7 @@ import android.widget.TextView;
 import com.nhance.technician.R;
 import com.nhance.technician.app.ApplicationConstants;
 import com.nhance.technician.app.NhanceApplication;
+import com.nhance.technician.logger.LOG;
 import com.nhance.technician.model.Application;
 import com.nhance.technician.service.fcm.RegistrationIntentService;
 import com.nhance.technician.ui.fragments.NavigationDrawerFragment;
@@ -199,7 +201,7 @@ public abstract class BaseFragmentActivity extends AppCompatActivity implements 
     public void onNavigationDrawerProfileClicked() {
 
 
-        Log.d(TAG,"Profile Clicked");
+        LOG.d(TAG,"Profile Clicked");
     }
 
     public static Activity getForegroundActivity() {
@@ -419,5 +421,48 @@ public abstract class BaseFragmentActivity extends AppCompatActivity implements 
                 }
             }
         });
+    }
+
+    public static String getCountryDialCode() {
+        String countryID;
+        String countryDialCode = "";
+
+        TelephonyManager telephonyMngr = (TelephonyManager) NhanceApplication.getContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+        countryID = telephonyMngr.getSimCountryIso().toUpperCase();
+        String[] arrCountryCode = NhanceApplication.getContext().getResources().getStringArray(R.array.CountryCodes);
+        for (int i = 0; i < arrCountryCode.length; i++) {
+            String[] arrDial = arrCountryCode[i].split(",");
+            if (arrDial[1].trim().equals(countryID.trim())) {
+                countryDialCode = arrDial[0];
+                break;
+            }
+        }
+
+        if (countryDialCode == null || countryDialCode.length() < 1) {
+            countryDialCode = "91";
+        }
+
+        return countryDialCode;
+    }
+
+    public static String getCountryID() {
+        String countryID;
+
+        TelephonyManager telephonyMngr = (TelephonyManager) NhanceApplication.getContext().getSystemService(Context.TELEPHONY_SERVICE);
+
+        countryID = telephonyMngr.getSimCountryIso().toUpperCase();
+        String[] arrCountryCode = NhanceApplication.getContext().getResources().getStringArray(R.array.CountryCodes);
+        for (int i = 0; i < arrCountryCode.length; i++) {
+            String[] arrDial = arrCountryCode[i].split(",");
+            if (arrDial[1].trim().equals(countryID.trim())) {
+                countryID = arrDial[1].trim().toLowerCase();
+                break;
+            }
+        }
+        if (countryID == null || countryID.length() < 1) {
+            countryID = "in";
+        }
+        return countryID;
     }
 }

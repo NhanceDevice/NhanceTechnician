@@ -67,7 +67,7 @@ public class RegistrationIntentService extends IntentService implements RestCons
             try {
                 FirebaseInstanceId.getInstance().deleteInstanceId();
             } catch (IOException e) {
-                Log.d(TAG, "Exception deleting token", e);
+                LOG.d(TAG, "Exception deleting token", e);
             }
             return null;
         }
@@ -116,7 +116,7 @@ public class RegistrationIntentService extends IntentService implements RestCons
             }
 
         } catch (Exception e) {
-            Log.d(TAG, "Failed to complete token refresh", e);
+            LOG.d(TAG, "Failed to complete token refresh", e);
             AccessPreferences.put(NhanceApplication.getContext(), ApplicationConstants.SENT_TOKEN_TO_SERVER, false);
         }
     }

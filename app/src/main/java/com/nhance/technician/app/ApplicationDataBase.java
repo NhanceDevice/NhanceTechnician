@@ -20,6 +20,7 @@ import com.nhance.technician.database.AppDatabaseUpgrade;
 import com.nhance.technician.datasets.GeneratedInvoiceTable;
 import com.nhance.technician.datasets.UserProfileTable;
 import com.nhance.technician.exception.NhanceException;
+import com.nhance.technician.logger.LOG;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -189,7 +190,7 @@ public class ApplicationDataBase {
             commitToDB();
             return newlyInsertedRowId;
         } catch (Exception e) {
-            Log.d(TAG, ">>>>>> ERROR : while Inserting in to data base");
+            LOG.d(TAG, ">>>>>> ERROR : while Inserting in to data base");
             e.printStackTrace();
             throw new NhanceException(NhanceException.DATABASE_UPDATE_ERR);
         } finally {

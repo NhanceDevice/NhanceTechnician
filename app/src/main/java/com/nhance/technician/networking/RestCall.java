@@ -41,6 +41,7 @@ public class RestCall implements RestConstants{
     public static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
 
     public static void post(String url, String json, Callback call) throws IOException {
+        LOG.i(RestCall.class.getName(), "url: "+url);
         String userAgentHeader = System.getProperty("http.agent");
         try {
 

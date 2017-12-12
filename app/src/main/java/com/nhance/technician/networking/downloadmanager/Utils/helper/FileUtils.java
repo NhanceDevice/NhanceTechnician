@@ -2,6 +2,8 @@ package com.nhance.technician.networking.downloadmanager.Utils.helper;
 
 import android.util.Log;
 
+import com.nhance.technician.logger.LOG;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -13,7 +15,7 @@ public class FileUtils {
     public static File create(String folder, String fileName){
         File file = new File(
                 address(folder, fileName));
-        Log.d("---------------------------------------", "Create file address: " + address(folder, fileName));
+        LOG.d("---------------------------------------", "Create file address: " + address(folder, fileName));
         try {
             file.createNewFile();
         } catch (IOException e) {

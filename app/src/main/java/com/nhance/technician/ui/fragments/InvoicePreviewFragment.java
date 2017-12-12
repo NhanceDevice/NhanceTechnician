@@ -136,7 +136,10 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
             if (partDetails != null && partDetails.size() > 0) {
                 partsDetailsContainerLL.setVisibility(View.VISIBLE);
                 newPartsInstalledRG.check(R.id.parts_installed_yes_rb);
-                for (ServicePartDTO partDetail : partDetails) {
+                for (int i = 0; i < partDetails.size(); i++) {
+                    ServicePartDTO partDetail = partDetails.get(i);
+//                    partDetail.setAmount(partDetail.getCalculatedAmount());
+//                    partDetails.set(i, partDetail);
                     inflatePartDetailsView(partDetail);
                 }
 
@@ -195,6 +198,7 @@ public class InvoicePreviewFragment extends Fragment implements ApplicationConst
                     serviceRequestDTO = new ServiceRequestDTO();
                     serviceRequestDTO.setResponseStatus(1);
                     serviceRequestDTO.setMessageDescription("Unable to process your request. Please try again.");
+                    ((BaseFragmentActivity)getActivity()).showAlert( getResources().getString(R.string.unable_to_process));
                 }
 
                 @Override
