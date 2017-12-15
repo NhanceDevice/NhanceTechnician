@@ -106,7 +106,7 @@ public class NhanceApplication extends Application implements ApplicationConstan
         LOG.d(TAG, "Oncreate Called.");
 
         PACKAGE_NAME = getApplicationContext().getPackageName();
-        paddingType = QA_PADDING;
+        paddingType = PROD_PADDING;
 
         switch (paddingType){
             case QA_PADDING:

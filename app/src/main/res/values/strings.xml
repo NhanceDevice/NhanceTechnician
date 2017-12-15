@@ -14,7 +14,7 @@
 
     <string name="in_production_backend_url">https://app.nhancenow.com</string><!--Prod Server HTTPS-->
 
-    <string name="ae_production_backend_url">https://app-ae.nhancenow.com</string><!--Prod Server HTTPS-->
+    <string name="ae_production_backend_url">https://app-ae.nhancenow.com</string><!--Prod Server AE HTTPS-->
 
     <string name="source_type">android</string>
     <string name="prompt_mobile">Mobile No</string>
